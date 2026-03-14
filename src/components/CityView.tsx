@@ -5,15 +5,13 @@ import { useCityStore } from '@/store/city-store'
 import BuildingTile from './BuildingTile'
 import { useRouter } from 'next/navigation'
 import { canSpawnBuilding } from '@/lib/game-logic'
+import MergeModal from './MergeModal'
 
 export default function CityView() {
   const { buildings, spawnTimestamps } = useCityStore()
   const router = useRouter()
   const showSpawnButton = canSpawnBuilding(buildings, spawnTimestamps, Date.now())
   const [showMerge, setShowMerge] = useState(false)
-
-  // suppress unused variable warning for now — MergeModal not yet implemented
-  void showMerge
 
   return (
     <div className="flex-1 px-4 py-4">
@@ -46,12 +44,13 @@ export default function CityView() {
           )}
           {buildings.length >= 2 && (
             <button
-              className="mt-3 w-full py-3 bg-purple-500 text-white rounded-xl font-medium active:bg-purple-600"
+              className="mt-3 w-full py-3 border-2 border-amber-200 text-amber-600 rounded-xl font-medium active:bg-amber-50"
               onClick={() => setShowMerge(true)}
             >
               🔀 Merge Buildings
             </button>
           )}
+          {showMerge && <MergeModal onClose={() => setShowMerge(false)} />}
         </>
       )}
     </div>
