@@ -2,15 +2,26 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, CreditCard, Smartphone, Building2, Wallet, Sparkles } from 'lucide-react'
+import { ArrowLeft, Sparkles, Shield } from 'lucide-react'
+import { usePrivy, useWallets as useConnectedWallets, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
+import { useWallets as useSolanaWallets, useSignTransaction } from '@privy-io/react-auth/solana'
+import { Connection } from '@solana/web3.js'
 import { ensureCity, deposit } from '@/lib/api'
 
 function PaymentContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const amount = parseFloat(searchParams.get('amount') || '0')
-  const [selectedMethod, setSelectedMethod] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [status, setStatus] = useState('')
+  const { user } = usePrivy()
+  const { wallets: connectedWallets } = useConnectedWallets()
+  const embeddedWallet = getEmbeddedConnectedWallet(connectedWallets)
+  const { wallets: solanaWallets } = useSolanaWallets()
+  const { signTransaction } = useSignTransaction()
+
+  // Find the Solana standard wallet matching the embedded wallet address for signing
+  const solanaWallet = solanaWallets.find(w => w.address === embeddedWallet?.address) ?? solanaWallets[0]
 
   useEffect(() => {
     if (!amount || amount <= 0) {
@@ -18,42 +29,71 @@ function PaymentContent() {
     }
   }, [amount, router])
 
-  const paymentMethods = [
-    { id: 'card', name: 'Credit/Debit Card', icon: CreditCard, color: '#5B9BD5', desc: 'Visa, Mastercard, Amex' },
-    { id: 'ewallet', name: 'E-Wallet', icon: Smartphone, color: '#FFA94D', desc: 'GrabPay, PayNow, TouchNGo' },
-    { id: 'bank', name: 'Bank Transfer', icon: Building2, color: '#7C3AED', desc: 'Direct bank transfer' },
-    { id: 'crypto', name: 'Crypto Wallet', icon: Wallet, color: '#10B981', desc: 'USDT, BTC, ETH' },
-  ]
-
-  const handlePayment = async () => {
-    if (!selectedMethod) return
+  const handleDeposit = async () => {
+    if (!solanaWallet) {
+      alert('Wallet not ready. Please wait a moment and try again.')
+      return
+    }
 
     setIsProcessing(true)
+    setStatus('Preparing transaction...')
 
     try {
-      // Simulate payment processing delay
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // 1. Get gas-sponsored Jupiter Lend deposit tx from backend
+      const prepareRes = await fetch('/api/deposit/prepare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userWallet: solanaWallet.address,
+          amountUSDC: amount,
+        }),
+      })
 
-      const cityId = await ensureCity()
-      const result = await deposit(cityId, amount)
+      if (!prepareRes.ok) {
+        const err = await prepareRes.json()
+        throw new Error(err.error || 'Failed to prepare transaction')
+      }
+
+      const { transaction: txBase64 } = await prepareRes.json()
+
+      // 2. Deserialize and sign with user's Privy wallet
+      setStatus('Please approve the transaction...')
+      const txBytes = Uint8Array.from(atob(txBase64), c => c.charCodeAt(0))
+
+      const { signedTransaction } = await signTransaction({
+        transaction: txBytes,
+        wallet: solanaWallet,
+      })
+
+      // 3. Submit to Solana
+      setStatus('Submitting to Solana...')
+      const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
+      const connection = new Connection(rpcUrl, 'confirmed')
+      const signature = await connection.sendRawTransaction(signedTransaction)
+      await connection.confirmTransaction(signature, 'confirmed')
+
+      // 4. Record deposit in backend
+      setStatus('Recording deposit...')
+      const cityId = await ensureCity(solanaWallet.address)
+      const result = await deposit(cityId, amount, signature)
 
       if (result.packs.length > 0) {
-        // Store pack IDs for sequential opening
         const packIds = result.packs.map(p => p.id)
         sessionStorage.setItem('pending_packs', JSON.stringify(packIds))
         router.replace(`/open-pack?packId=${packIds[0]}`)
       } else {
-        // No packs earned (deposit < $100), go home
         router.replace('/')
       }
     } catch (err) {
       console.error('Deposit failed:', err)
-      alert('Deposit failed. Please try again.')
+      alert(`Deposit failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
       setIsProcessing(false)
+      setStatus('')
     }
   }
 
   const numPacks = Math.floor(amount / 100)
+  const userEmail = user?.email?.address
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F0F7FC] via-[#FAFBFC] to-[#FFF8F0] flex flex-col">
@@ -69,9 +109,9 @@ function PaymentContent() {
           </button>
           <div>
             <h1 className="text-xl font-bold text-[#1F2937]" style={{ fontFamily: 'Fredoka' }}>
-              Payment Method
+              Deposit to Vault
             </h1>
-            <p className="text-sm text-[#6B7280]">Choose how to deposit</p>
+            <p className="text-sm text-[#6B7280]">Jupiter Lend USDC Vault</p>
           </div>
         </div>
       </header>
@@ -81,7 +121,7 @@ function PaymentContent() {
         <div className="bg-white rounded-3xl p-6 shadow-lg border border-black/5 mb-8">
           <p className="text-[#6B7280] text-sm mb-2">Deposit Amount</p>
           <p className="text-4xl font-bold text-[#1F2937] mb-4" style={{ fontFamily: 'Fredoka' }}>
-            ${amount.toFixed(2)}
+            ${amount.toFixed(2)} USDC
           </p>
 
           {numPacks > 0 && (
@@ -94,74 +134,51 @@ function PaymentContent() {
           )}
         </div>
 
-        {/* Payment Methods */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-[#1F2937] mb-4" style={{ fontFamily: 'Fredoka' }}>
-            Select Payment Method
-          </h2>
-          <div className="space-y-3">
-            {paymentMethods.map((method) => {
-              const Icon = method.icon
-              const isSelected = selectedMethod === method.id
-
-              return (
-                <button
-                  key={method.id}
-                  onClick={() => setSelectedMethod(method.id)}
-                  disabled={isProcessing}
-                  className={`w-full p-5 rounded-2xl transition-all ${
-                    isSelected
-                      ? 'bg-gradient-to-r from-[#5B9BD5] to-[#4A8BC2] shadow-lg scale-[1.02]'
-                      : 'bg-white border-2 border-[#E5E7EB] hover:border-[#5B9BD5]'
-                  } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                        isSelected
-                          ? 'bg-white/20 border border-white/30'
-                          : 'bg-gradient-to-br from-gray-50 to-gray-100'
-                      }`}
-                    >
-                      <Icon
-                        className={`w-7 h-7 ${isSelected ? 'text-white' : 'text-[#1F2937]'}`}
-                      />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className={`font-semibold ${isSelected ? 'text-white' : 'text-[#1F2937]'}`}>
-                        {method.name}
-                      </p>
-                      <p className={`text-sm ${isSelected ? 'text-white/80' : 'text-[#6B7280]'}`}>
-                        {method.desc}
-                      </p>
-                    </div>
-                    {isSelected && (
-                      <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                        <div className="w-3 h-3 bg-[#5B9BD5] rounded-full" />
-                      </div>
-                    )}
-                  </div>
-                </button>
-              )
-            })}
+        {/* Wallet Info */}
+        <div className="bg-white rounded-2xl p-5 shadow-lg border border-black/5 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#5B9BD5]/10 to-[#4A8BC2]/10 flex items-center justify-center">
+              <Shield className="w-7 h-7 text-[#5B9BD5]" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-[#1F2937]">Your Wallet</p>
+              {userEmail && (
+                <p className="text-sm text-[#6B7280]">{userEmail}</p>
+              )}
+              {solanaWallet && (
+                <p className="text-xs text-[#9CA3AF] font-mono mt-1">
+                  {solanaWallet.address.slice(0, 4)}...{solanaWallet.address.slice(-4)}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Security Note */}
-        <div className="bg-gradient-to-br from-[#10B981]/10 to-white rounded-2xl p-6 border border-[#10B981]/20">
+        {/* How It Works */}
+        <div className="bg-gradient-to-br from-[#10B981]/10 to-white rounded-2xl p-6 border border-[#10B981]/20 mb-6">
           <p className="text-sm text-[#6B7280]">
-            <strong>Secure Payment:</strong> Your payment information is encrypted and secure. We never store your card details.
+            <strong>Self-custodial:</strong> Your USDC is deposited directly into Jupiter Lend from your wallet. The vault position belongs to you. Gas fees are covered by us.
           </p>
         </div>
+
+        {/* Processing Status */}
+        {isProcessing && status && (
+          <div className="bg-[#5B9BD5]/10 rounded-2xl p-4 border border-[#5B9BD5]/20 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 border-2 border-[#5B9BD5]/30 border-t-[#5B9BD5] rounded-full animate-spin" />
+              <p className="text-sm text-[#5B9BD5] font-semibold">{status}</p>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Fixed Bottom Button */}
       <div className="bg-white border-t border-black/5 px-6 py-4">
         <button
-          onClick={handlePayment}
-          disabled={!selectedMethod || isProcessing}
+          onClick={handleDeposit}
+          disabled={!solanaWallet || isProcessing}
           className={`w-full py-4 px-6 rounded-2xl font-semibold shadow-lg transition-all ${
-            selectedMethod && !isProcessing
+            solanaWallet && !isProcessing
               ? 'bg-gradient-to-r from-[#10B981] to-[#059669] text-white hover:shadow-xl active:scale-95'
               : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
           }`}
@@ -171,8 +188,10 @@ function PaymentContent() {
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               Processing...
             </span>
+          ) : !solanaWallet ? (
+            'Waiting for wallet...'
           ) : (
-            `Confirm Payment - $${amount.toFixed(2)}`
+            `Deposit $${amount.toFixed(2)} to Jupiter Lend`
           )}
         </button>
       </div>

@@ -1,16 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb, createCity, getCityById } from '@/lib/db'
+import { getDb, createCity, getCityById, getCityByWalletAddress } from '@/lib/db'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, referralCode } = body
+    const { name, referralCode, walletAddress } = body
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
     const db = getDb()
+
+    // If wallet address provided, return existing city for that wallet
+    if (walletAddress && typeof walletAddress === 'string') {
+      const existing = getCityByWalletAddress(db, walletAddress)
+      if (existing) {
+        return NextResponse.json({
+          id: existing.id,
+          name: existing.name,
+          walletAddress: existing.walletAddress,
+          referralCode: existing.id,
+          createdAt: existing.createdAt,
+        }, { status: 200 })
+      }
+    }
 
     if (referralCode) {
       const referrer = getCityById(db, referralCode)
@@ -19,10 +33,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const city = createCity(db, name.trim(), referralCode || undefined)
+    const city = createCity(db, name.trim(), referralCode || undefined, walletAddress || undefined)
     return NextResponse.json({
       id: city.id,
       name: city.name,
+      walletAddress: city.walletAddress,
       referralCode: city.id,
       createdAt: city.createdAt,
     }, { status: 201 })

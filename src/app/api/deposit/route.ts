@@ -4,7 +4,7 @@ import { getDb, getCityById, createDeposit, createPack } from '@/lib/db'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { cityId, amount } = body
+    const { cityId, amount, txSignature } = body
 
     if (!cityId || typeof amount !== 'number' || amount <= 0) {
       return NextResponse.json({ error: 'cityId and positive amount required' }, { status: 400 })
@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       deposit: { id: deposit.id, amount: deposit.amount, createdAt: deposit.createdAt },
       packs: packs.map(p => ({ id: p.id, cardId: p.cardId, createdAt: p.createdAt })),
+      txSignature: txSignature || null,
     }, { status: 201 })
   } catch (error) {
     if (error instanceof SyntaxError) {

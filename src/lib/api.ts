@@ -72,22 +72,30 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   return data as T
 }
 
-export async function createCity(name: string, referralCode?: string): Promise<{ id: string; name: string; referralCode: string; createdAt: number }> {
+export async function createCity(name: string, referralCode?: string, walletAddress?: string): Promise<{ id: string; name: string; walletAddress?: string; referralCode: string; createdAt: number }> {
   const body: Record<string, string> = { name }
   if (referralCode) body.referralCode = referralCode
+  if (walletAddress) body.walletAddress = walletAddress
   return apiFetch('/api/cities', {
     method: 'POST',
     body: JSON.stringify(body),
   })
 }
 
-export async function ensureCity(): Promise<string> {
-  let cityId = getCityId()
-  if (cityId) return cityId
+export async function ensureCity(walletAddress?: string): Promise<string> {
+  // If no wallet, fall back to localStorage-based city
+  if (!walletAddress) {
+    const cityId = getCityId()
+    if (cityId) return cityId
 
-  const city = await createCity('My City')
+    const city = await createCity('My City')
+    setCityId(city.id)
+    return city.id
+  }
+
+  // Wallet-based: always pass wallet to backend (returns existing or creates new)
+  const city = await createCity('My City', undefined, walletAddress)
   setCityId(city.id)
-  console.log('Created city:', city.id)
   return city.id
 }
 
@@ -95,10 +103,10 @@ export async function getPortfolio(cityId: string): Promise<Portfolio> {
   return apiFetch(`/api/cities/${cityId}/portfolio`)
 }
 
-export async function deposit(cityId: string, amountDollars: number): Promise<DepositResult> {
+export async function deposit(cityId: string, amountDollars: number, txSignature?: string): Promise<DepositResult> {
   return apiFetch('/api/deposit', {
     method: 'POST',
-    body: JSON.stringify({ cityId, amount: amountDollars }),
+    body: JSON.stringify({ cityId, amount: amountDollars, txSignature }),
   })
 }
 

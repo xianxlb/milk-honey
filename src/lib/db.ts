@@ -27,6 +27,7 @@ function initSchema(db: Database.Database) {
     CREATE TABLE IF NOT EXISTS cities (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      wallet_address TEXT,
       referred_by TEXT,
       created_at INTEGER NOT NULL,
       FOREIGN KEY (referred_by) REFERENCES cities(id)
@@ -71,21 +72,29 @@ function now(): number {
 export interface City {
   id: string
   name: string
+  walletAddress: string | null
   referredBy: string | null
   createdAt: number
 }
 
-export function createCity(db: Database.Database, name: string, referredBy?: string): City {
-  const city: City = { id: uuid(), name, referredBy: referredBy ?? null, createdAt: now() }
-  db.prepare('INSERT INTO cities (id, name, referred_by, created_at) VALUES (?, ?, ?, ?)')
-    .run(city.id, city.name, city.referredBy, city.createdAt)
+export function createCity(db: Database.Database, name: string, referredBy?: string, walletAddress?: string): City {
+  const city: City = { id: uuid(), name, walletAddress: walletAddress ?? null, referredBy: referredBy ?? null, createdAt: now() }
+  db.prepare('INSERT INTO cities (id, name, wallet_address, referred_by, created_at) VALUES (?, ?, ?, ?, ?)')
+    .run(city.id, city.name, city.walletAddress, city.referredBy, city.createdAt)
   return city
 }
 
 export function getCityById(db: Database.Database, id: string): City | null {
   const row = db.prepare(
-    'SELECT id, name, referred_by as referredBy, created_at as createdAt FROM cities WHERE id = ?'
+    'SELECT id, name, wallet_address as walletAddress, referred_by as referredBy, created_at as createdAt FROM cities WHERE id = ?'
   ).get(id) as City | undefined
+  return row ?? null
+}
+
+export function getCityByWalletAddress(db: Database.Database, walletAddress: string): City | null {
+  const row = db.prepare(
+    'SELECT id, name, wallet_address as walletAddress, referred_by as referredBy, created_at as createdAt FROM cities WHERE wallet_address = ?'
+  ).get(walletAddress) as City | undefined
   return row ?? null
 }
 

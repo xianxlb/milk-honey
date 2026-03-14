@@ -2,21 +2,28 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Sparkles, Plus, Coins, Star, Settings, TrendingUp } from 'lucide-react'
+import { Sparkles, Plus, Coins, Star, Settings, TrendingUp, LogOut } from 'lucide-react'
 import { ensureCity, getPortfolio, clearCityId, type Portfolio } from '@/lib/api'
 import { getBuildingEmoji, getBuildingImage, getBuildingName } from '@/lib/building-images'
+import { usePrivy, useWallets as useConnectedWallets, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
+import LoginGate from '@/components/LoginGate'
 import confetti from 'canvas-confetti'
 
-export default function HomePage() {
+function HomeContent() {
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [displayTotal, setDisplayTotal] = useState(0)
+  const { user, logout } = usePrivy()
+  const { wallets } = useConnectedWallets()
+  const embeddedWallet = getEmbeddedConnectedWallet(wallets)
+  const walletAddress = embeddedWallet?.address
+  const userEmail = user?.email?.address
 
   const loadPortfolio = useCallback(async () => {
     try {
-      const cityId = await ensureCity()
+      const cityId = await ensureCity(walletAddress)
       const data = await getPortfolio(cityId)
       setPortfolio(data)
       const totalDollars = (data.stats.totalDepositedCents + data.stats.yieldEarnedCents) / 100
@@ -28,7 +35,7 @@ export default function HomePage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [walletAddress])
 
   useEffect(() => {
     loadPortfolio()
@@ -54,6 +61,11 @@ export default function HomePage() {
 
     return () => clearInterval(interval)
   }, [portfolio])
+
+  const handleLogout = async () => {
+    clearCityId()
+    await logout()
+  }
 
   const handleResetApp = () => {
     clearCityId()
@@ -138,15 +150,28 @@ export default function HomePage() {
               <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>
                 Honey Milk
               </h1>
-              <p className="text-white/80 text-sm">Build your village!</p>
+              {userEmail ? (
+                <p className="text-white/80 text-sm">{userEmail}</p>
+              ) : (
+                <p className="text-white/80 text-sm">Build your village!</p>
+              )}
             </div>
           </div>
-          <button
-            onClick={() => setShowResetConfirm(true)}
-            className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30"
-          >
-            <Settings className="w-5 h-5 text-white" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleLogout}
+              className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5 text-white" />
+            </button>
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30"
+            >
+              <Settings className="w-5 h-5 text-white" />
+            </button>
+          </div>
         </div>
 
         {/* Savings Display */}
@@ -321,5 +346,13 @@ export default function HomePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <LoginGate>
+      <HomeContent />
+    </LoginGate>
   )
 }
