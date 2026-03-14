@@ -137,7 +137,7 @@ export function getPackById(db: Database.Database, id: string): Pack | null {
 
 export function getUnopenedPacksByCityId(db: Database.Database, cityId: string): Pack[] {
   return db.prepare(
-    'SELECT id, city_id as cityId, card_id as cardId, created_at as createdAt, opened_at as openedAt FROM packs WHERE city_id = ? AND card_id IS NULL'
+    'SELECT id, city_id as cityId, card_id as cardId, created_at as createdAt, opened_at as openedAt FROM packs WHERE city_id = ? AND opened_at IS NULL'
   ).all(cityId) as Pack[]
 }
 
@@ -176,7 +176,7 @@ export function getCardById(db: Database.Database, id: string): Card | null {
 
 export function getCardsByCityId(db: Database.Database, cityId: string): Card[] {
   return db.prepare(
-    'SELECT id, city_id as cityId, building_type as buildingType, level, created_at as createdAt FROM cards WHERE city_id = ?'
+    'SELECT id, city_id as cityId, building_type as buildingType, level, created_at as createdAt FROM cards WHERE city_id = ? ORDER BY level DESC, created_at DESC'
   ).all(cityId) as Card[]
 }
 
@@ -204,7 +204,8 @@ export function calculateYieldCents(db: Database.Database, cityId: string): numb
   for (const dep of deposits) {
     const elapsedSeconds = currentTime - dep.createdAt
     const elapsedYears = elapsedSeconds / (365 * 24 * 60 * 60)
-    totalYield += dep.amount * 0.05 * elapsedYears
+    // 500x multiplier for hackathon demo visibility
+    totalYield += dep.amount * 0.05 * elapsedYears * 500
   }
   return Math.floor(totalYield)
 }

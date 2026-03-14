@@ -82,8 +82,17 @@ export async function createCity(name: string, referralCode?: string): Promise<{
 }
 
 export async function ensureCity(): Promise<string> {
-  let cityId = getCityId()
-  if (cityId) return cityId
+  const existingId = getCityId()
+  if (existingId) {
+    // Verify the city still exists in the DB
+    try {
+      await getPortfolio(existingId)
+      return existingId
+    } catch {
+      // Stale ID — city was deleted (e.g. DB reset). Clear and create fresh.
+      clearCityId()
+    }
+  }
 
   const city = await createCity('My City')
   setCityId(city.id)

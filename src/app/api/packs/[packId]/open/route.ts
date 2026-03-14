@@ -23,7 +23,7 @@ export async function POST(
     const available = BUILDING_TYPES.filter(b => prosperityDollars >= b.unlockProsperity)
     const buildingType = available[Math.floor(Math.random() * available.length)].type
 
-    const card = createCard(db, pack.cityId, buildingType, 0)
+    const card = createCard(db, pack.cityId, buildingType, 1)
     const openedPack = openPack(db, pack.id, card.id)
 
     return NextResponse.json({

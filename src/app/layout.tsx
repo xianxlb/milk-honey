@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Honey Milk',
+  title: 'Milk & Honey',
   description: 'Build your village while earning yield',
   manifest: '/manifest.json',
 }
@@ -12,7 +12,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#5B9BD5',
+  themeColor: '#6CB4E8',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

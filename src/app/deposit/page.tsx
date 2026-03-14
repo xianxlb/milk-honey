@@ -26,12 +26,10 @@ export default function DepositAmountPage() {
 
   const handleContinue = () => {
     const finalAmount = showCustom ? parseFloat(customAmount) : parseFloat(amount)
-
     if (isNaN(finalAmount) || finalAmount <= 0) {
       alert('Please enter a valid amount')
       return
     }
-
     router.push(`/payment?amount=${finalAmount}`)
   }
 
@@ -39,54 +37,42 @@ export default function DepositAmountPage() {
   const isValid = !isNaN(selectedAmount) && selectedAmount > 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F0F7FC] via-[#FAFBFC] to-[#FFF8F0] flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b border-black/5 px-6 py-4">
+    <div className="min-h-screen bg-[#F5F0E8] flex flex-col">
+      <header className="bg-[#FBF8F2] border-b-2 border-[#1A1A1A]/5 px-6 py-4">
         <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="w-10 h-10 rounded-xl bg-[#F3F4F6] flex items-center justify-center hover:bg-[#E5E7EB] transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-[#1F2937]" />
+          <Link href="/" className="w-10 h-10 rounded-xl bg-[#F5F0E8] flex items-center justify-center hover:bg-[#EDE8DC] transition-colors border-2 border-[#1A1A1A]/8">
+            <ArrowLeft className="w-5 h-5 text-[#1A1A1A]" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-[#1F2937]" style={{ fontFamily: 'Fredoka' }}>
-              Deposit Amount
-            </h1>
-            <p className="text-sm text-[#6B7280]">How much would you like to save?</p>
+            <h1 className="text-xl font-bold text-[#1A1A1A]" style={{ fontFamily: 'Fredoka' }}>Deposit Amount</h1>
+            <p className="text-sm text-[#1A1A1A]/50 font-medium">How much would you like to save?</p>
           </div>
         </div>
       </header>
 
       <main className="flex-1 px-6 py-8">
-        {/* Amount Display */}
-        <div className="bg-gradient-to-r from-[#5B9BD5] to-[#4A8BC2] rounded-3xl p-8 mb-8 shadow-xl">
-          <p className="text-white/80 text-sm mb-2 text-center">Amount to Deposit</p>
-          <div className="flex items-center justify-center gap-2">
-            <DollarSign className="w-8 h-8 text-white" />
+        <div className="bg-[#6CB4E8] rounded-3xl p-8 mb-8 shadow-lg relative overflow-hidden border-2 border-[#1A1A1A]/10">
+          <div className="absolute top-2 right-8 w-16 h-8 bg-white/20 rounded-full" />
+          <p className="text-white/70 text-sm mb-2 text-center font-medium relative z-10">Amount to Deposit</p>
+          <div className="flex items-center justify-center gap-2 relative z-10">
+            <DollarSign className="w-8 h-8 text-white/80" />
             <p className="text-6xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>
-              {showCustom
-                ? (customAmount || '0')
-                : (amount || '0')
-              }
+              {showCustom ? (customAmount || '0') : (amount || '0')}
             </p>
           </div>
         </div>
 
-        {/* Quick Amounts */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-[#1F2937] mb-4" style={{ fontFamily: 'Fredoka' }}>
-            Quick Amounts
-          </h2>
+          <h2 className="text-lg font-bold text-[#1A1A1A] mb-4" style={{ fontFamily: 'Fredoka' }}>Quick Amounts</h2>
           <div className="grid grid-cols-3 gap-3">
             {quickAmounts.map((value) => (
               <button
                 key={value}
                 onClick={() => handleQuickAmount(value)}
-                className={`py-4 px-4 rounded-2xl font-semibold transition-all ${
+                className={`py-4 px-4 rounded-2xl font-semibold transition-all border-2 ${
                   amount === value.toString() && !showCustom
-                    ? 'bg-gradient-to-r from-[#5B9BD5] to-[#4A8BC2] text-white shadow-lg scale-105'
-                    : 'bg-white border-2 border-[#E5E7EB] text-[#1F2937] hover:border-[#5B9BD5]'
+                    ? 'bg-[#6CB4E8] text-white shadow-lg scale-105 border-[#1A1A1A]/10'
+                    : 'bg-[#FBF8F2] border-[#1A1A1A]/8 text-[#1A1A1A] hover:border-[#6CB4E8]'
                 }`}
               >
                 ${value}
@@ -95,61 +81,49 @@ export default function DepositAmountPage() {
           </div>
         </div>
 
-        {/* Custom Amount */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-[#1F2937] mb-4" style={{ fontFamily: 'Fredoka' }}>
-            Custom Amount
-          </h2>
+          <h2 className="text-lg font-bold text-[#1A1A1A] mb-4" style={{ fontFamily: 'Fredoka' }}>Custom Amount</h2>
           <button
             onClick={handleCustomAmount}
-            className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all mb-4 ${
+            className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all mb-4 border-2 ${
               showCustom
-                ? 'bg-gradient-to-r from-[#5B9BD5] to-[#4A8BC2] text-white shadow-lg'
-                : 'bg-white border-2 border-[#E5E7EB] text-[#1F2937] hover:border-[#5B9BD5]'
+                ? 'bg-[#6CB4E8] text-white shadow-lg border-[#1A1A1A]/10'
+                : 'bg-[#FBF8F2] border-[#1A1A1A]/8 text-[#1A1A1A] hover:border-[#6CB4E8]'
             }`}
           >
             Enter Custom Amount
           </button>
 
           {showCustom && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-black/5">
-              <label className="block text-sm font-semibold text-[#1F2937] mb-2">
-                Enter Amount ($)
-              </label>
+            <div className="bg-[#FBF8F2] rounded-2xl p-6 shadow-lg border-2 border-[#1A1A1A]/8">
+              <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">Enter Amount ($)</label>
               <div className="relative">
-                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
+                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1A1A1A]/40" />
                 <input
-                  type="number"
-                  value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
+                  type="number" value={customAmount} onChange={(e) => setCustomAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border-2 border-[#E5E7EB] rounded-xl text-2xl font-bold text-[#1F2937] focus:border-[#5B9BD5] focus:outline-none transition-colors"
-                  autoFocus
-                  step="0.01"
-                  min="0"
+                  className="w-full pl-12 pr-4 py-4 bg-[#F5F0E8] border-2 border-[#1A1A1A]/10 rounded-xl text-2xl font-bold text-[#1A1A1A] focus:border-[#6CB4E8] focus:outline-none transition-colors"
+                  autoFocus step="0.01" min="0"
                 />
               </div>
             </div>
           )}
         </div>
 
-        {/* Info Card */}
-        <div className="bg-gradient-to-br from-[#FFA94D]/10 to-white rounded-2xl p-6 border border-[#FFA94D]/20">
-          <p className="text-sm text-[#6B7280]">
-            <strong>Tip:</strong> Deposit $100 or more to unlock a new building for your village!
+        <div className="bg-[#F0C430]/20 rounded-2xl p-6 border-2 border-[#F0C430]/30">
+          <p className="text-sm text-[#1A1A1A]/60">
+            <strong className="text-[#1A1A1A]">Tip:</strong> Deposit $100 or more to unlock a new building!
           </p>
         </div>
       </main>
 
-      {/* Fixed Bottom Button */}
-      <div className="bg-white border-t border-black/5 px-6 py-4">
+      <div className="sticky bottom-0 bg-[#FBF8F2] border-t-2 border-[#1A1A1A]/5 px-6 py-4">
         <button
-          onClick={handleContinue}
-          disabled={!isValid}
-          className={`w-full py-4 px-6 rounded-2xl font-semibold shadow-lg transition-all ${
+          onClick={handleContinue} disabled={!isValid}
+          className={`w-full py-4 px-6 rounded-2xl font-bold shadow-lg transition-all border-2 ${
             isValid
-              ? 'bg-gradient-to-r from-[#10B981] to-[#059669] text-white hover:shadow-xl active:scale-95'
-              : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
+              ? 'bg-[#F0C430] text-[#1A1A1A] border-[#1A1A1A]/10 hover:shadow-xl active:scale-95'
+              : 'bg-[#EDE8DC] text-[#1A1A1A]/30 border-[#1A1A1A]/5 cursor-not-allowed'
           }`}
         >
           Continue to Payment
