@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { AppPrivyProvider } from '@/components/privy-provider'
 
 export const metadata: Metadata = {
   title: 'Milk & Honey',
@@ -18,7 +19,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="antialiased max-w-md mx-auto">{children}</body>
+      <body className="antialiased max-w-md mx-auto"><AppPrivyProvider>{children}</AppPrivyProvider></body>
     </html>
   )
 }
