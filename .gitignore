@@ -47,3 +47,4 @@ next-env.d.ts
 
 # large assets (keep PNGs out, WebP is small enough to commit)
 public/buildings/*.png
+.superpowers/
