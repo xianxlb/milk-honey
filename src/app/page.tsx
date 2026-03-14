@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Sparkles, Plus } from 'lucide-react'
-import { ensureCity, getPortfolio, clearCityId, type Portfolio } from '@/lib/api'
+// TODO: rewire in Chunk 5
 import { getBuildingEmoji, getBuildingImage, getBuildingName } from '@/lib/building-images'
 
 export default function HomePage() {

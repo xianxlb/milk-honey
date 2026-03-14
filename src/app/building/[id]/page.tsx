@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Sparkles, TrendingUp } from 'lucide-react'
-import { ensureCity, getPortfolio, mergeCards, type Card } from '@/lib/api'
+// TODO: rewire in Chunk 5
 import { getBuildingEmoji, getBuildingImage, getBuildingName } from '@/lib/building-images'
 
 export default function BuildingDetailPage({ params }: { params: Promise<{ id: string }> }) {

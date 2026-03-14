@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { Sparkles } from 'lucide-react'
-import { openPack, type Card } from '@/lib/api'
+// TODO: rewire in Chunk 5
 import { getBuildingEmoji, getBuildingImage, getBuildingName } from '@/lib/building-images'
 
 function OpenPackContent() {
