@@ -43,6 +43,7 @@ describe('POST /api/users/me', () => {
     mockDb.insert.mockReturnValue({
       values: vi.fn().mockReturnValue({
         onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
+        onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
       }),
     })
     mockDb.select.mockReturnValue({

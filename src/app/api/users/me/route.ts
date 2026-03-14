@@ -7,15 +7,12 @@ export const POST = withAuth(async (req, { walletAddress }) => {
   const body = await req.json().catch(() => ({}))
   const name: string | null = typeof body.name === 'string' ? body.name : null
 
-  // Build update set — only include name if explicitly provided
-  const updateSet = name !== null ? { name } : {}
-
-  await db.insert(users)
-    .values({ wallet_address: walletAddress, name })
-    .onConflictDoUpdate({
-      target: users.wallet_address,
-      set: Object.keys(updateSet).length > 0 ? updateSet : { wallet_address: walletAddress },
-    })
+  const insert = db.insert(users).values({ wallet_address: walletAddress, name })
+  if (name !== null) {
+    await insert.onConflictDoUpdate({ target: users.wallet_address, set: { name } })
+  } else {
+    await insert.onConflictDoNothing()
+  }
 
   const [user] = await db.select().from(users).where(eq(users.wallet_address, walletAddress))
   return NextResponse.json({
