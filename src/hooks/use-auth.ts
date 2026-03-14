@@ -12,9 +12,10 @@ export function useAuth() {
     if (ready && !authenticated) router.replace('/login')
   }, [ready, authenticated, router])
 
-  const walletAddress = (user?.linkedAccounts ?? []).find(
+  const solanaAccount = (user?.linkedAccounts ?? []).find(
     (a) => a.type === 'wallet' && (a as { chainType?: string }).chainType === 'solana'
-  )?.address as string | undefined
+  ) as { address: string } | undefined
+  const walletAddress = solanaAccount?.address
 
   return { ready, authenticated, getAccessToken, walletAddress }
 }

@@ -4,13 +4,17 @@ import { useState, useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { Sparkles } from 'lucide-react'
-// TODO: rewire in Chunk 5
+import { useAuth } from '@/hooks/use-auth'
+import { openPack } from '@/lib/client-api'
 import { getBuildingEmoji, getBuildingImage, getBuildingName } from '@/lib/building-images'
+
+type Card = { id: string; building_type: string; level: number }
 
 function OpenPackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const packId = searchParams.get('packId')
+  const { ready, getAccessToken } = useAuth()
 
   const [stage, setStage] = useState<'cutting' | 'opening' | 'revealed'>('cutting')
   const [cutProgress, setCutProgress] = useState(0)
@@ -35,6 +39,12 @@ function OpenPackContent() {
 
   useEffect(() => { if (!packId) router.replace('/') }, [packId, router])
 
+  if (!ready) return (
+    <div className="fixed inset-0 z-50 bg-[#1A1A1A]/85 flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+    </div>
+  )
+
   const handleCutStart = () => { if (stage === 'cutting') setIsDragging(true) }
 
   const handleCutMove = (e: React.MouseEvent | React.TouchEvent) => {
@@ -54,7 +64,8 @@ function OpenPackContent() {
     if (!packId) return
     setStage('opening')
     try {
-      const result = await openPack(packId)
+      const token = await getAccessToken()
+      const result = await openPack(token!, packId)
       setRevealedCard(result.card)
       setTimeout(() => setStage('revealed'), 1000)
     } catch (err) {
@@ -151,16 +162,16 @@ function OpenPackContent() {
                   </div>
                   <div className="relative mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC] p-4">
                     <div className="w-full h-64 flex items-center justify-center">
-                      {getBuildingImage(revealedCard.buildingType) ? (
-                        <img src={getBuildingImage(revealedCard.buildingType)!} alt={getBuildingName(revealedCard.buildingType)} className="w-full h-full object-contain" />
+                      {getBuildingImage(revealedCard.building_type) ? (
+                        <img src={getBuildingImage(revealedCard.building_type)!} alt={getBuildingName(revealedCard.building_type)} className="w-full h-full object-contain" />
                       ) : (
-                        <span className="text-[120px]">{getBuildingEmoji(revealedCard.buildingType)}</span>
+                        <span className="text-[120px]">{getBuildingEmoji(revealedCard.building_type)}</span>
                       )}
                     </div>
                     <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent" animate={{ x: ['-100%', '200%'] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }} />
                   </div>
                   <div className="text-center">
-                    <h3 className="text-3xl font-bold text-[#1A1A1A] mb-2" style={{ fontFamily: 'Fredoka' }}>{getBuildingName(revealedCard.buildingType)}</h3>
+                    <h3 className="text-3xl font-bold text-[#1A1A1A] mb-2" style={{ fontFamily: 'Fredoka' }}>{getBuildingName(revealedCard.building_type)}</h3>
                     <div className="flex items-center justify-center gap-2 text-[#1A1A1A]/50">
                       <Sparkles className="w-4 h-4 text-[#F0C430]" />
                       <p className="text-sm font-semibold">Level {revealedCard.level} Building</p>
