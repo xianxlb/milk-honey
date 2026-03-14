@@ -1,0 +1,33 @@
+import { pgTable, text, bigint, integer, timestamp, uuid } from 'drizzle-orm/pg-core'
+
+export const users = pgTable('users', {
+  wallet_address: text('wallet_address').primaryKey(),
+  name: text('name'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const deposits = pgTable('deposits', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  wallet_address: text('wallet_address').notNull().references(() => users.wallet_address),
+  tx_signature: text('tx_signature').notNull().unique(),
+  amount_usdc: bigint('amount_usdc', { mode: 'number' }).notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const cards = pgTable('cards', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  wallet_address: text('wallet_address').notNull().references(() => users.wallet_address),
+  building_type: text('building_type').notNull(),
+  level: integer('level').notNull().default(1),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+})
+
+// cards must be defined before packs (FK reference)
+export const packs = pgTable('packs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  wallet_address: text('wallet_address').notNull().references(() => users.wallet_address),
+  deposit_id: uuid('deposit_id').notNull().references(() => deposits.id),
+  card_id: uuid('card_id').references(() => cards.id),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  opened_at: timestamp('opened_at'),
+})
