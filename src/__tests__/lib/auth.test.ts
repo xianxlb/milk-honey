@@ -5,10 +5,12 @@ const mockVerifyAuthToken = vi.fn()
 const mockGetUser = vi.fn()
 
 vi.mock('@privy-io/server-auth', () => ({
-  PrivyClient: vi.fn().mockImplementation(() => ({
-    verifyAuthToken: mockVerifyAuthToken,
-    getUser: mockGetUser,
-  })),
+  PrivyClient: vi.fn().mockImplementation(function () {
+    return {
+      verifyAuthToken: mockVerifyAuthToken,
+      getUser: mockGetUser,
+    }
+  }),
 }))
 
 const { verifyPrivyJwt } = await import('@/lib/auth')

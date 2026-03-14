@@ -1,26 +1,15 @@
 import { PrivyClient } from '@privy-io/server-auth'
 import { NextResponse } from 'next/server'
 
-// Called as a factory so vi.fn() mocks work in tests (arrow-fn implementations
-// cannot be used as constructors in vitest v4; calling without `new` is fine).
-type PrivyInstance = InstanceType<typeof PrivyClient>
-const PrivyFactory = PrivyClient as unknown as (
-  appId: string,
-  secret: string
-) => PrivyInstance
-
-function getPrivyClient(): PrivyInstance {
-  return PrivyFactory(
-    process.env.NEXT_PUBLIC_PRIVY_APP_ID!,
-    process.env.PRIVY_APP_SECRET!,
-  )
-}
+const privy = new PrivyClient(
+  process.env.NEXT_PUBLIC_PRIVY_APP_ID!,
+  process.env.PRIVY_APP_SECRET!,
+)
 
 export async function verifyPrivyJwt(req: Request): Promise<string | null> {
   const auth = req.headers.get('authorization')
   if (!auth?.startsWith('Bearer ')) return null
   try {
-    const privy = getPrivyClient()
     const claims = await privy.verifyAuthToken(auth.slice(7))
     const user = await privy.getUser(claims.userId)
     const solanaAccount = user.linkedAccounts.find(
@@ -38,7 +27,6 @@ type AuthedHandler = (
 ) => Promise<NextResponse>
 
 export function withAuth(handler: AuthedHandler) {
-  // Next.js 15+ passes params as a Promise — handle both resolved and promised forms
   return async (
     req: Request,
     { params }: { params?: Promise<Record<string, string>> | Record<string, string> }
