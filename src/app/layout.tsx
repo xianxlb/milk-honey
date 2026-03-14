@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Milk Honey',
-  description: 'Grow your cute city while earning yield',
+  title: 'Honey Milk',
+  description: 'Build your village while earning yield',
   manifest: '/manifest.json',
 }
 
@@ -12,13 +12,13 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#F5A623',
+  themeColor: '#5B9BD5',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased max-w-md mx-auto">{children}</body>
     </html>
   )
 }
