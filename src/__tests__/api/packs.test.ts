@@ -37,11 +37,11 @@ describe('pack opening', () => {
     }
   })
 
-  it('includes farm when prosperity >= $3000', () => {
+  it('picks from all 5 types', () => {
     const types = new Set<string>()
-    for (let i = 0; i < 100; i++) {
-      types.add(pickRandomBuildingType(300000))
+    for (let i = 0; i < 200; i++) {
+      types.add(pickRandomBuildingType(0))
     }
-    expect(types.has('farm')).toBe(true)
+    expect(types.size).toBe(5)
   })
 })

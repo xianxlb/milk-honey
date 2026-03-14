@@ -15,7 +15,7 @@ describe('referral social proof', () => {
   it('returns referrer stats', () => {
     const city = createCity(db, 'Xian City')
     createDeposit(db, city.id, 50000) // $500
-    createCard(db, city.id, 'flower-shop', 0)
+    createCard(db, city.id, 'bakery', 0)
     createCard(db, city.id, 'pet-shop', 2)
 
     const totalDeposited = getTotalDepositedCents(db, city.id)

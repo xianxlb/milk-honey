@@ -11,12 +11,12 @@ beforeEach(() => {
 describe('card merging', () => {
   it('merges two same-type same-level cards into level+1', () => {
     const city = createCity(db, 'Test City')
-    const card1 = createCard(db, city.id, 'flower-shop', 0)
-    const card2 = createCard(db, city.id, 'flower-shop', 0)
+    const card1 = createCard(db, city.id, 'bakery', 0)
+    const card2 = createCard(db, city.id, 'bakery', 0)
 
     deleteCard(db, card1.id)
     deleteCard(db, card2.id)
-    const merged = createCard(db, city.id, 'flower-shop', 1)
+    const merged = createCard(db, city.id, 'bakery', 1)
 
     expect(merged.level).toBe(1)
     expect(getCardById(db, card1.id)).toBeNull()
@@ -26,7 +26,7 @@ describe('card merging', () => {
 
   it('rejects merge of different types', () => {
     const city = createCity(db, 'Test City')
-    const card1 = createCard(db, city.id, 'flower-shop', 0)
+    const card1 = createCard(db, city.id, 'bakery', 0)
     const card2 = createCard(db, city.id, 'pet-shop', 0)
 
     const error = validateMerge(card1, card2)
@@ -35,8 +35,8 @@ describe('card merging', () => {
 
   it('rejects merge of different levels', () => {
     const city = createCity(db, 'Test City')
-    const card1 = createCard(db, city.id, 'flower-shop', 0)
-    const card2 = createCard(db, city.id, 'flower-shop', 1)
+    const card1 = createCard(db, city.id, 'bakery', 0)
+    const card2 = createCard(db, city.id, 'bakery', 1)
 
     const error = validateMerge(card1, card2)
     expect(error).toBe('Cards must be the same level')
@@ -44,8 +44,8 @@ describe('card merging', () => {
 
   it('rejects merge at max level', () => {
     const city = createCity(db, 'Test City')
-    const card1 = createCard(db, city.id, 'flower-shop', 8)
-    const card2 = createCard(db, city.id, 'flower-shop', 8)
+    const card1 = createCard(db, city.id, 'bakery', 8)
+    const card2 = createCard(db, city.id, 'bakery', 8)
 
     const error = validateMerge(card1, card2)
     expect(error).toBe('Cards are already at max level')

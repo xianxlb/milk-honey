@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { Sparkles, X } from 'lucide-react'
 import { openPack, type Card } from '@/lib/api'
-import { getBuildingEmoji, getBuildingName } from '@/lib/building-images'
+import { getBuildingEmoji, getBuildingImage, getBuildingName } from '@/lib/building-images'
 
 function OpenPackContent() {
   const router = useRouter()
@@ -279,7 +279,11 @@ function OpenPackContent() {
                   {/* Building display */}
                   <div className="relative mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-[#F0F7FC] to-[#FFF8F0] p-4">
                     <div className="w-full h-64 flex items-center justify-center">
-                      <span className="text-[120px]">{getBuildingEmoji(revealedCard.buildingType)}</span>
+                      {getBuildingImage(revealedCard.buildingType) ? (
+                        <img src={getBuildingImage(revealedCard.buildingType)!} alt={getBuildingName(revealedCard.buildingType)} className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="text-[120px]">{getBuildingEmoji(revealedCard.buildingType)}</span>
+                      )}
                     </div>
 
                     <motion.div

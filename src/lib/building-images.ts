@@ -5,6 +5,8 @@ for (const b of BUILDING_TYPES) {
   EMOJI_MAP[b.type] = b.emoji
 }
 
+const HAS_IMAGE = new Set(['bakery', 'bookshop', 'cafe', 'house', 'pet-shop'])
+
 export function getBuildingEmoji(buildingType: string): string {
   return EMOJI_MAP[buildingType] ?? '🏠'
 }
@@ -15,8 +17,6 @@ export function getBuildingName(buildingType: string): string {
 }
 
 export function getBuildingImage(buildingType: string): string | null {
-  // Check if a real image exists at the expected path
-  // Falls back to null (use emoji instead)
-  const path = `/buildings/${buildingType}.png`
-  return path
+  if (!HAS_IMAGE.has(buildingType)) return null
+  return `/buildings/${buildingType}.webp`
 }

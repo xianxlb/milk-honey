@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Sparkles, TrendingUp } from 'lucide-react'
 import { ensureCity, getPortfolio, mergeCards, type Card } from '@/lib/api'
-import { getBuildingEmoji, getBuildingName } from '@/lib/building-images'
+import { getBuildingEmoji, getBuildingImage, getBuildingName } from '@/lib/building-images'
 
 export default function BuildingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -132,7 +132,11 @@ export default function BuildingDetailPage({ params }: { params: Promise<{ id: s
 
                 <div className="mb-6">
                   <div className="w-40 h-40 mx-auto bg-gradient-to-br from-[#7C3AED]/20 to-[#6D28D9]/20 rounded-3xl flex items-center justify-center shadow-2xl border-4 border-[#7C3AED]/40 relative animate-bounce-in">
-                    <span className="text-[80px]">{getBuildingEmoji(mergedCard.buildingType)}</span>
+                    {getBuildingImage(mergedCard.buildingType) ? (
+                      <img src={getBuildingImage(mergedCard.buildingType)!} alt={getBuildingName(mergedCard.buildingType)} className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-[80px]">{getBuildingEmoji(mergedCard.buildingType)}</span>
+                    )}
 
                     <div className="absolute -top-3 -right-3 bg-gradient-to-r from-[#FFA94D] to-[#FF9529] rounded-full w-16 h-16 flex items-center justify-center border-4 border-white shadow-lg">
                       <span className="text-xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>
@@ -176,7 +180,11 @@ export default function BuildingDetailPage({ params }: { params: Promise<{ id: s
         {/* Building Image */}
         <div className="bg-white rounded-3xl p-8 shadow-xl border border-black/5 mb-8">
           <div className="aspect-square bg-gradient-to-br from-[#F9FAFB] to-[#F3F4F6] rounded-2xl overflow-hidden flex items-center justify-center mb-6 relative">
-            <span className="text-[120px]">{getBuildingEmoji(card.buildingType)}</span>
+            {getBuildingImage(card.buildingType) ? (
+              <img src={getBuildingImage(card.buildingType)!} alt={getBuildingName(card.buildingType)} className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-[120px]">{getBuildingEmoji(card.buildingType)}</span>
+            )}
 
             {/* Level Badge */}
             <div className="absolute top-4 right-4 bg-gradient-to-r from-[#FFA94D] to-[#FF9529] rounded-full w-16 h-16 flex items-center justify-center border-4 border-white shadow-lg">

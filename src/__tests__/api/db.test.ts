@@ -50,7 +50,7 @@ describe('packs', () => {
     const db = getDb(':memory:')
     const city = createCity(db, 'Test City')
     const pack = createPack(db, city.id)
-    const card = createCard(db, city.id, 'flower-shop', 0)
+    const card = createCard(db, city.id, 'bakery', 0)
     const opened = openPack(db, pack.id, card.id)
     expect(opened.cardId).toBe(card.id)
     expect(opened.openedAt).toBeDefined()

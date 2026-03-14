@@ -28,17 +28,17 @@ describe('full demo flow', () => {
     // 4. Open all packs (force flower-shop for merge test)
     const cards = []
     for (const pack of packs) {
-      const card = createCard(db, xian.id, 'flower-shop', 0)
+      const card = createCard(db, xian.id, 'bakery', 0)
       openPack(db, pack.id, card.id)
       cards.push(card)
     }
     expect(getUnopenedPacksByCityId(db, xian.id)).toHaveLength(0)
     expect(getCardsByCityId(db, xian.id)).toHaveLength(3)
 
-    // 5. Merge two level-0 flower-shops -> level-1
+    // 5. Merge two level-0 bakeries -> level-1
     deleteCard(db, cards[0].id)
     deleteCard(db, cards[1].id)
-    const merged = createCard(db, xian.id, 'flower-shop', 1)
+    const merged = createCard(db, xian.id, 'bakery', 1)
     expect(merged.level).toBe(1)
     expect(getCardsByCityId(db, xian.id)).toHaveLength(2) // merged + remaining
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Sparkles, Plus, Coins, Star, Settings, TrendingUp } from 'lucide-react'
 import { ensureCity, getPortfolio, clearCityId, type Portfolio } from '@/lib/api'
-import { getBuildingEmoji, getBuildingName } from '@/lib/building-images'
+import { getBuildingEmoji, getBuildingImage, getBuildingName } from '@/lib/building-images'
 import confetti from 'canvas-confetti'
 
 export default function HomePage() {
@@ -220,7 +220,11 @@ export default function HomePage() {
               className="relative bg-white rounded-2xl p-3 shadow-lg border border-black/5 hover:scale-105 transition-transform active:scale-95"
             >
               <div className="aspect-square bg-gradient-to-br from-[#F9FAFB] to-[#F3F4F6] rounded-xl mb-2 overflow-hidden flex items-center justify-center">
-                <span className="text-5xl">{getBuildingEmoji(card.buildingType)}</span>
+                {getBuildingImage(card.buildingType) ? (
+                  <img src={getBuildingImage(card.buildingType)!} alt={getBuildingName(card.buildingType)} className="w-full h-full object-contain" />
+                ) : (
+                  <span className="text-5xl">{getBuildingEmoji(card.buildingType)}</span>
+                )}
               </div>
 
               {/* Level Badge */}

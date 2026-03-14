@@ -1,4 +1,4 @@
-export type BuildingType = 'flower-shop' | 'pet-shop' | 'bookshop' | 'farm'
+export type BuildingType = 'bakery' | 'bookshop' | 'cafe' | 'house' | 'pet-shop'
 export type BuildingStatus = 'active' | 'wilting'
 export type YieldSource = 'jupiter' | 'voltr'
 

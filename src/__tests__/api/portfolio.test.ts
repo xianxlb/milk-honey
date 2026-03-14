@@ -15,7 +15,7 @@ describe('portfolio data', () => {
   it('returns complete portfolio for a city', () => {
     const city = createCity(db, 'Test City')
     createDeposit(db, city.id, 20000) // $200
-    createCard(db, city.id, 'flower-shop', 0)
+    createCard(db, city.id, 'bakery', 0)
     createCard(db, city.id, 'pet-shop', 1)
     createPack(db, city.id) // unopened
 

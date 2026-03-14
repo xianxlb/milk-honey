@@ -10,10 +10,11 @@ export const WILT_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000
 export const TOKENS_PER_DOLLAR = 10
 
 export const BUILDING_TYPES: BuildingTypeConfig[] = [
-  { type: 'flower-shop', name: 'Flower Shop', emoji: '🌸', unlockProsperity: 0 },
-  { type: 'pet-shop', name: 'Pet Shop', emoji: '🐱', unlockProsperity: 0 },
+  { type: 'bakery', name: 'Bakery', emoji: '🧁', unlockProsperity: 0 },
   { type: 'bookshop', name: 'Bookshop', emoji: '📚', unlockProsperity: 0 },
-  { type: 'farm', name: 'Farm', emoji: '🌾', unlockProsperity: 3000 },
+  { type: 'cafe', name: 'Café', emoji: '☕', unlockProsperity: 0 },
+  { type: 'house', name: 'House', emoji: '🏠', unlockProsperity: 0 },
+  { type: 'pet-shop', name: 'Pet Shop', emoji: '🐱', unlockProsperity: 0 },
 ]
 
 export const STARTER_BUILDING_TYPES = BUILDING_TYPES.filter(b => b.unlockProsperity === 0)

@@ -13,7 +13,7 @@ import { SPAWN_WINDOW_MS } from '@/lib/constants'
 
 const makeBuilding = (overrides: Partial<Building> = {}): Building => ({
   id: 'test-1',
-  type: 'flower-shop',
+  type: 'bakery',
   totalValue: 100,
   depositValue: 100,
   yieldEarned: 0,
@@ -84,26 +84,26 @@ describe('canSpawnBuilding', () => {
 
 describe('canMergeBuildings', () => {
   it('allows merge of same type and same level', () => {
-    const a = makeBuilding({ id: 'a', type: 'flower-shop', level: 1 })
-    const b = makeBuilding({ id: 'b', type: 'flower-shop', level: 1 })
+    const a = makeBuilding({ id: 'a', type: 'bakery', level: 1 })
+    const b = makeBuilding({ id: 'b', type: 'bakery', level: 1 })
     expect(canMergeBuildings(a, b)).toBe(true)
   })
 
   it('blocks merge of different types', () => {
-    const a = makeBuilding({ id: 'a', type: 'flower-shop', level: 1 })
+    const a = makeBuilding({ id: 'a', type: 'bakery', level: 1 })
     const b = makeBuilding({ id: 'b', type: 'pet-shop', level: 1 })
     expect(canMergeBuildings(a, b)).toBe(false)
   })
 
   it('blocks merge of different levels', () => {
-    const a = makeBuilding({ id: 'a', type: 'flower-shop', level: 1 })
-    const b = makeBuilding({ id: 'b', type: 'flower-shop', level: 2 })
+    const a = makeBuilding({ id: 'a', type: 'bakery', level: 1 })
+    const b = makeBuilding({ id: 'b', type: 'bakery', level: 2 })
     expect(canMergeBuildings(a, b)).toBe(false)
   })
 
   it('blocks merge of level 8 buildings', () => {
-    const a = makeBuilding({ id: 'a', type: 'flower-shop', level: 8 })
-    const b = makeBuilding({ id: 'b', type: 'flower-shop', level: 8 })
+    const a = makeBuilding({ id: 'a', type: 'bakery', level: 8 })
+    const b = makeBuilding({ id: 'b', type: 'bakery', level: 8 })
     expect(canMergeBuildings(a, b)).toBe(false)
   })
 })
@@ -138,14 +138,14 @@ describe('calculateTokensFromYield', () => {
 })
 
 describe('getAvailableBuildingTypes', () => {
-  it('returns 3 types at prosperity < 3000', () => {
-    const types = getAvailableBuildingTypes(2999)
-    expect(types).toHaveLength(3)
+  it('returns 5 types at prosperity 0', () => {
+    const types = getAvailableBuildingTypes(0)
+    expect(types).toHaveLength(5)
   })
 
-  it('returns 4 types at prosperity >= 3000', () => {
+  it('returns 5 types at high prosperity', () => {
     const types = getAvailableBuildingTypes(3000)
-    expect(types).toHaveLength(4)
+    expect(types).toHaveLength(5)
   })
 })
 
