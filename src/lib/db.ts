@@ -181,6 +181,7 @@ export function getCardsByCityId(db: Database.Database, cityId: string): Card[] 
 }
 
 export function deleteCard(db: Database.Database, id: string): void {
+  db.prepare('UPDATE packs SET card_id = NULL WHERE card_id = ?').run(id)
   db.prepare('DELETE FROM cards WHERE id = ?').run(id)
 }
 
