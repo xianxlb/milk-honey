@@ -30,6 +30,18 @@ export async function generateDepositTx({
   return data.transaction as string
 }
 
+// Returns current APY as a percentage (e.g. 5.46 = 5.46%). Returns 0 on error.
+export async function readApy(): Promise<number> {
+  try {
+    const res = await fetch(`${LULO_BASE_URL}/rates.getRates`)
+    if (!res.ok) return 0
+    const data = await res.json()
+    return (data.regular?.CURRENT as number) ?? 0
+  } catch {
+    return 0
+  }
+}
+
 // Returns total Lulo position value for wallet in USDC micro-units.
 // Returns 0 on error so portfolio degrades gracefully (yield shows as $0, not a crash).
 export async function readPosition(walletAddress: string): Promise<number> {
