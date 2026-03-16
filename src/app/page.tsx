@@ -92,7 +92,7 @@ export default function HomePage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
                 <p className="text-[#1A1A1A] font-bold text-lg leading-tight" style={{ fontFamily: 'Fredoka' }}>{stats.apyPercent.toFixed(2)}%</p>
               </div>
-              <p className="text-[#1A1A1A]/60 text-[10px] font-semibold text-right">APY</p>
+              <p className="text-[#1A1A1A]/60 text-[10px] font-semibold text-right">interest p.a.</p>
             </div>
           </div>
           <div className="bg-white/20 backdrop-blur-sm rounded-3xl p-6 border-2 border-white/30">
