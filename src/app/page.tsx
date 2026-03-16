@@ -87,6 +87,13 @@ export default function HomePage() {
   // Amounts from API are in USDC micro-units (6 decimals) — divide by 1_000_000 for dollars
   const totalDollars = stats.totalDepositedUsdc / 1_000_000
   const yieldDollars = stats.yieldEarnedUsdc / 1_000_000
+  // Compute decimal places so the last digit ticks ~10x per second
+  const ratePerMs = totalDollars > 0 && stats.apyPercent > 0
+    ? totalDollars * (stats.apyPercent / 100) / (365 * 24 * 3600 * 1000)
+    : 0
+  const displayDecimals = ratePerMs > 0
+    ? Math.min(10, Math.max(6, Math.ceil(-Math.log10(ratePerMs * 100))))
+    : 6
   const nextMilestone = Math.ceil(Math.max(totalDollars, 0.01) / 100) * 100
   const progress = ((totalDollars % 100) / 100) * 100
   const amountUntilReward = Math.max(0, nextMilestone - totalDollars)
@@ -120,7 +127,7 @@ export default function HomePage() {
           <div className="bg-white/20 backdrop-blur-sm rounded-3xl p-6 border-2 border-white/30">
             <p className="text-white/70 text-sm mb-1 font-medium">Total Savings</p>
             <p className="text-5xl font-bold text-white mb-4 tracking-tight tabular-nums" style={{ fontFamily: 'Fredoka' }}>
-              ${liveTotal.toFixed(6)}
+              ${liveTotal.toFixed(displayDecimals)}
             </p>
             <div className="mb-3">
               <div className="bg-white/20 rounded-full h-3.5 overflow-hidden border border-white/20">
