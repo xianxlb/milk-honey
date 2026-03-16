@@ -1,6 +1,6 @@
 'use client'
 
-import { usePrivy } from '@privy-io/react-auth'
+import { usePrivy, type WalletWithMetadata } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
@@ -12,9 +12,8 @@ export function useAuth() {
     if (ready && !authenticated) router.replace('/login')
   }, [ready, authenticated, router])
 
-  const solanaAccount = (user?.linkedAccounts ?? []).find(
-    (a) => a.type === 'wallet' && (a as { chainType?: string }).chainType === 'solana'
-  ) as { address: string } | undefined
+  const solanaAccount = (user?.linkedAccounts as WalletWithMetadata[] | undefined)
+    ?.find(a => a.type === 'wallet' && a.chainType === 'solana')
   const walletAddress = solanaAccount?.address
 
   return { ready, authenticated, getAccessToken, walletAddress }

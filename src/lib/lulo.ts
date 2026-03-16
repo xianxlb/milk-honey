@@ -1,6 +1,7 @@
+import { USDC_MINT } from '@/lib/constants'
+
 const LULO_API_KEY = process.env.LULO_API_KEY ?? ''
 const LULO_BASE_URL = 'https://api.lulo.fi/v1'
-const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 
 export async function generateDepositTx({
   walletAddress,

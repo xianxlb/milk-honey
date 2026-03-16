@@ -18,3 +18,5 @@ export const BUILDING_TYPES: BuildingTypeConfig[] = [
 ]
 
 export const STARTER_BUILDING_TYPES = BUILDING_TYPES.filter(b => b.unlockProsperity === 0)
+
+export const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'

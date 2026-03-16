@@ -13,7 +13,7 @@ export async function verifyPrivyJwt(req: Request): Promise<string | null> {
     const claims = await privy.verifyAuthToken(auth.slice(7))
     const user = await privy.getUser(claims.userId)
     const solanaAccount = user.linkedAccounts.find(
-      (a) => a.type === 'wallet' && (a as { chainType?: string }).chainType === 'solana'
+      (a) => a.type === 'wallet' && 'chainType' in a && a.chainType === 'solana'
     ) as { address: string } | undefined
     return solanaAccount?.address ?? null
   } catch {
