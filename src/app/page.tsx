@@ -12,6 +12,9 @@ export default function HomePage() {
   const [portfolio, setPortfolio] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [liveTotal, setLiveTotal] = useState(0)
+  const rafRef = useRef<number>(0)
+  const lastTsRef = useRef<number>(0)
 
   const loadPortfolio = useCallback(async () => {
     try {
@@ -39,6 +42,25 @@ export default function HomePage() {
     return () => window.removeEventListener('focus', handleFocus)
   }, [authenticated, loadPortfolio])
 
+  useEffect(() => {
+    if (!portfolio) return
+    const { stats } = portfolio
+    const totalDollars = stats.totalDepositedUsdc / 1_000_000
+    const yieldDollars = stats.yieldEarnedUsdc / 1_000_000
+    const base = totalDollars + yieldDollars
+    const ratePerMs = totalDollars * (stats.apyPercent / 100) / (365 * 24 * 3600 * 1000)
+    setLiveTotal(base)
+    lastTsRef.current = performance.now()
+    const tick = (ts: number) => {
+      const elapsed = ts - lastTsRef.current
+      lastTsRef.current = ts
+      setLiveTotal(prev => prev + ratePerMs * elapsed)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [portfolio])
+
   if (!ready || (authenticated && loading)) {
     return (
       <div className="min-h-screen bg-[#F5F0E8] flex items-center justify-center">
@@ -65,25 +87,6 @@ export default function HomePage() {
   // Amounts from API are in USDC micro-units (6 decimals) — divide by 1_000_000 for dollars
   const totalDollars = stats.totalDepositedUsdc / 1_000_000
   const yieldDollars = stats.yieldEarnedUsdc / 1_000_000
-
-  // Live counter: animate total savings ticking up in real time based on APY
-  const [liveTotal, setLiveTotal] = useState(totalDollars + yieldDollars)
-  const rafRef = useRef<number>(0)
-  const lastTsRef = useRef<number>(0)
-  useEffect(() => {
-    const base = totalDollars + yieldDollars
-    const ratePerMs = totalDollars * (stats.apyPercent / 100) / (365 * 24 * 3600 * 1000)
-    setLiveTotal(base)
-    lastTsRef.current = performance.now()
-    const tick = (ts: number) => {
-      const elapsed = ts - lastTsRef.current
-      lastTsRef.current = ts
-      setLiveTotal(prev => prev + ratePerMs * elapsed)
-      rafRef.current = requestAnimationFrame(tick)
-    }
-    rafRef.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [totalDollars, yieldDollars, stats.apyPercent])
   const nextMilestone = Math.ceil(Math.max(totalDollars, 0.01) / 100) * 100
   const progress = ((totalDollars % 100) / 100) * 100
   const amountUntilReward = Math.max(0, nextMilestone - totalDollars)
