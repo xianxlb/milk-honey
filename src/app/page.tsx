@@ -15,6 +15,7 @@ export default function HomePage() {
   const [liveTotal, setLiveTotal] = useState(0)
   const rafRef = useRef<number>(0)
   const lastTsRef = useRef<number>(0)
+  const ratePerMsRef = useRef<number>(0)
 
   const loadPortfolio = useCallback(async () => {
     try {
@@ -42,24 +43,31 @@ export default function HomePage() {
     return () => window.removeEventListener('focus', handleFocus)
   }, [authenticated, loadPortfolio])
 
+  // When portfolio loads/refreshes: update rate and sync forward (never back)
   useEffect(() => {
     if (!portfolio) return
     const { stats } = portfolio
     const totalDollars = stats.totalDepositedUsdc / 1_000_000
     const yieldDollars = stats.yieldEarnedUsdc / 1_000_000
-    const base = totalDollars + yieldDollars
-    const ratePerMs = totalDollars * (stats.apyPercent / 100) / (365 * 24 * 3600 * 1000)
-    setLiveTotal(base)
+    ratePerMsRef.current = totalDollars > 0 && stats.apyPercent > 0
+      ? totalDollars * (stats.apyPercent / 100) / (365 * 24 * 3600 * 1000)
+      : 0
+    // Only move forward — if server reports higher value (real yield captured), catch up
+    setLiveTotal(prev => Math.max(prev, totalDollars + yieldDollars))
+  }, [portfolio])
+
+  // RAF loop runs once for the lifetime of the component — never restarts on revisit
+  useEffect(() => {
     lastTsRef.current = performance.now()
     const tick = (ts: number) => {
       const elapsed = ts - lastTsRef.current
       lastTsRef.current = ts
-      setLiveTotal(prev => prev + ratePerMs * elapsed)
+      setLiveTotal(prev => prev + ratePerMsRef.current * elapsed)
       rafRef.current = requestAnimationFrame(tick)
     }
     rafRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [portfolio])
+  }, [])
 
   if (!ready || (authenticated && loading)) {
     return (
@@ -87,12 +95,12 @@ export default function HomePage() {
   // Amounts from API are in USDC micro-units (6 decimals) — divide by 1_000_000 for dollars
   const totalDollars = stats.totalDepositedUsdc / 1_000_000
   const yieldDollars = stats.yieldEarnedUsdc / 1_000_000
-  // Compute decimal places so the last digit ticks ~10x per second
-  const ratePerMs = totalDollars > 0 && stats.apyPercent > 0
-    ? totalDollars * (stats.apyPercent / 100) / (365 * 24 * 3600 * 1000)
+  // Compute decimal places so the last digit ticks ~once per second
+  const ratePerSec = totalDollars > 0 && stats.apyPercent > 0
+    ? totalDollars * (stats.apyPercent / 100) / (365 * 24 * 3600)
     : 0
-  const displayDecimals = ratePerMs > 0
-    ? Math.min(10, Math.max(6, Math.ceil(-Math.log10(ratePerMs * 100))))
+  const displayDecimals = ratePerSec > 0
+    ? Math.min(10, Math.max(6, Math.ceil(-Math.log10(ratePerSec))))
     : 6
   const nextMilestone = Math.ceil(Math.max(totalDollars, 0.01) / 100) * 100
   const progress = ((totalDollars % 100) / 100) * 100
