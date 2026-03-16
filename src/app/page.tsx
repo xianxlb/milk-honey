@@ -88,8 +88,11 @@ export default function HomePage() {
               </div>
             </div>
             <div className="bg-[#F0C430] rounded-xl px-3 py-2 border-2 border-[#1A1A1A]/10 shadow-md">
-              <p className="text-[#1A1A1A] font-bold text-lg leading-tight" style={{ fontFamily: 'Fredoka' }}>{stats.apyPercent}%</p>
-              <p className="text-[#1A1A1A]/60 text-[10px] font-semibold">APY</p>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
+                <p className="text-[#1A1A1A] font-bold text-lg leading-tight" style={{ fontFamily: 'Fredoka' }}>{stats.apyPercent.toFixed(2)}%</p>
+              </div>
+              <p className="text-[#1A1A1A]/60 text-[10px] font-semibold text-right">APY</p>
             </div>
           </div>
           <div className="bg-white/20 backdrop-blur-sm rounded-3xl p-6 border-2 border-white/30">
