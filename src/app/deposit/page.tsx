@@ -3,13 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
+import { usePrivy, type WalletWithMetadata } from '@privy-io/react-auth'
 import { useAuth } from '@/hooks/use-auth'
 import { getDepositTx, verifyDeposit } from '@/lib/client-api'
+import { MIN_DEPOSIT } from '@/lib/constants'
 import { useWallets, useSignAndSendTransaction } from '@privy-io/react-auth/solana'
 import bs58 from 'bs58'
 
 export default function DepositPage() {
   const router = useRouter()
+  const { user } = usePrivy()
   const { ready, getAccessToken } = useAuth()
   const { wallets } = useWallets()
   const { signAndSendTransaction } = useSignAndSendTransaction()
@@ -23,8 +26,8 @@ export default function DepositPage() {
 
   const handleDeposit = async () => {
     const dollars = parseFloat(amount)
-    if (!dollars || dollars < 100) {
-      setErrorMsg('Minimum deposit is $100 USDC')
+    if (!dollars || dollars < MIN_DEPOSIT) {
+      setErrorMsg(`Minimum deposit is $${MIN_DEPOSIT} USDC`)
       return
     }
     const amountUsdc = Math.floor(dollars * 1_000_000)
@@ -37,9 +40,12 @@ export default function DepositPage() {
       if (!token) throw new Error('Not authenticated')
       const { transaction: txBase64 } = await getDepositTx(token, amountUsdc)
 
-      // Step 2: Sign and send via Privy Solana wallet
+      // Step 2: Sign and send — prefer external wallet (e.g. Jupiter Mobile) over embedded
       setStatus('signing')
-      const wallet = wallets[0]
+      const embeddedAddress = (user?.linkedAccounts as WalletWithMetadata[] | undefined)
+        ?.find(a => a.type === 'wallet' && a.walletClientType === 'privy' && a.chainType === 'solana')
+        ?.address
+      const wallet = wallets.find(w => w.address !== embeddedAddress) ?? wallets[0]
       if (!wallet) throw new Error('No Solana wallet connected')
 
       const txBytes = new Uint8Array(Buffer.from(txBase64, 'base64'))
@@ -103,7 +109,7 @@ export default function DepositPage() {
         <div className="bg-[#FBF8F2] rounded-3xl p-6 shadow-lg border-2 border-[#1A1A1A]/8 mb-8">
           <p className="text-[#1A1A1A]/50 text-sm mb-2 font-medium">Amount (USD)</p>
           <input
-            type="number" min="100" step="100" value={amount}
+            type="number" min={MIN_DEPOSIT} step="1" value={amount}
             onChange={(e) => setAmount(e.target.value)} disabled={isProcessing}
             placeholder="100"
             className="w-full text-4xl font-bold text-[#1A1A1A] bg-transparent outline-none mb-4"

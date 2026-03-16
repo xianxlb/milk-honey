@@ -1,6 +1,5 @@
 const LULO_API_KEY = process.env.LULO_API_KEY ?? ''
-// ⚠️ Verify this URL and the request body shape against dev.lulo.fi before use
-const LULO_DEPOSIT_URL = 'https://api.lulo.fi/v1/generate.transactions.deposit'
+const LULO_BASE_URL = 'https://api.lulo.fi/v1'
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 
 export async function generateDepositTx({
@@ -10,11 +9,15 @@ export async function generateDepositTx({
   walletAddress: string
   amountUsdc: number
 }): Promise<string> {
-  const res = await fetch(LULO_DEPOSIT_URL, {
+  // Lulo API expects whole USDC (e.g. 100 = $100), not micro-units
+  const res = await fetch(`${LULO_BASE_URL}/generate.transactions.deposit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': LULO_API_KEY },
-    // ⚠️ Verify these field names against dev.lulo.fi
-    body: JSON.stringify({ owner: walletAddress, mintAddress: USDC_MINT, regularAmount: amountUsdc }),
+    body: JSON.stringify({
+      owner: walletAddress,
+      mintAddress: USDC_MINT,
+      regularAmount: amountUsdc / 1_000_000,
+    }),
   })
 
   if (!res.ok) {
@@ -23,20 +26,21 @@ export async function generateDepositTx({
   }
 
   const data = await res.json()
-  // ⚠️ Verify the response field name ('transaction', 'tx', 'data', etc.) against dev.lulo.fi
   return data.transaction as string
 }
 
 // Returns total Lulo position value for wallet in USDC micro-units.
-// ⚠️ Implement based on dev.lulo.fi docs — use API endpoint or on-chain PDA read.
-// Returns 0 on error so portfolio degrades gracefully (yield shows as 0, not a crash).
+// Returns 0 on error so portfolio degrades gracefully (yield shows as $0, not a crash).
 export async function readPosition(walletAddress: string): Promise<number> {
-  // Replace this stub with the real implementation from dev.lulo.fi
-  // Option A (REST): fetch(`https://api.lulo.fi/v1/accounts/${walletAddress}`, { headers: { 'x-api-key': LULO_API_KEY } })
-  // Option B (on-chain PDA): see docs.lulo.fi/integration-guide for seed derivation
   try {
-    // Stub — replace with real call
-    throw new Error('readPosition not yet implemented')
+    const res = await fetch(
+      `${LULO_BASE_URL}/account.getAccount?owner=${walletAddress}`,
+      { headers: { 'x-api-key': LULO_API_KEY } },
+    )
+    if (!res.ok) return 0
+    const data = await res.json()
+    // totalUsdValue is in whole USD; convert to micro-units for internal consistency
+    return Math.round((data.totalUsdValue as number) * 1_000_000)
   } catch {
     return 0
   }

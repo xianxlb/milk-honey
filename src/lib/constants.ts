@@ -2,7 +2,7 @@ import { BuildingTypeConfig } from '@/store/types'
 
 export const LEVEL_THRESHOLDS = [100, 200, 400, 800, 1600, 3200, 6400, 12800] as const
 export const MAX_LEVEL = 8
-export const MIN_DEPOSIT = 100
+export const MIN_DEPOSIT = 1
 export const MAX_BUILDINGS = 20
 export const MAX_SPAWNS_PER_DAY = 2
 export const SPAWN_WINDOW_MS = 24 * 60 * 60 * 1000
