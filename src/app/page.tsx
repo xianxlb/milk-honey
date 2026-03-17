@@ -49,11 +49,12 @@ export default function HomePage() {
     const { stats } = portfolio
     const totalDollars = stats.totalDepositedUsdc / 1_000_000
     const yieldDollars = stats.yieldEarnedUsdc / 1_000_000
-    ratePerMsRef.current = totalDollars > 0 && stats.apyPercent > 0
-      ? totalDollars * (stats.apyPercent / 100) / (365 * 24 * 3600 * 1000)
+    const currentPositionDollars = totalDollars + yieldDollars
+    ratePerMsRef.current = currentPositionDollars > 0 && stats.apyPercent > 0
+      ? currentPositionDollars * (stats.apyPercent / 100) / (365 * 24 * 3600 * 1000)
       : 0
     // Only move forward — if server reports higher value (real yield captured), catch up
-    setLiveTotal(prev => Math.max(prev, totalDollars + yieldDollars))
+    setLiveTotal(prev => Math.max(prev, currentPositionDollars))
   }, [portfolio])
 
   // RAF loop runs once for the lifetime of the component — never restarts on revisit
@@ -102,8 +103,8 @@ export default function HomePage() {
   const displayDecimals = ratePerSec > 0
     ? Math.min(10, Math.max(6, Math.ceil(-Math.log10(ratePerSec))))
     : 6
-  const nextMilestone = Math.ceil(Math.max(totalDollars, 0.01) / 100) * 100
-  const progress = ((totalDollars % 100) / 100) * 100
+  const nextMilestone = Math.ceil(Math.max(totalDollars, 0.01) / 20) * 20
+  const progress = ((totalDollars % 20) / 20) * 100
   const amountUntilReward = Math.max(0, nextMilestone - totalDollars)
   const gridClass = cards.length <= 6 ? 'grid-cols-2' : 'grid-cols-3'
 
@@ -176,7 +177,7 @@ export default function HomePage() {
           <div className="bg-[#FBF8F2] rounded-2xl border-2 border-dashed border-[#1A1A1A]/15 p-8 mb-8 text-center">
             <img src="/mascot.png" alt="Mascot" className="w-20 h-20 mx-auto mb-3 opacity-60" />
             <p className="text-[#1A1A1A]/70 font-semibold mb-1">No buildings yet</p>
-            <p className="text-sm text-[#1A1A1A]/40">Deposit $100 USDC to unlock your first building!</p>
+            <p className="text-sm text-[#1A1A1A]/40">Deposit $20 USDC to unlock your first building!</p>
           </div>
         ) : (
           <div className={`grid ${gridClass} gap-4 mb-8`}>

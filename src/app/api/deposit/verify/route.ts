@@ -4,7 +4,7 @@ import { withAuth } from '@/lib/auth'
 import { verifyTx } from '@/lib/solana'
 import { db, deposits, packs, users } from '@/lib/db'
 
-const USDC_PER_PACK = 100_000_000 // 100 USDC in micro-units
+const USDC_PER_PACK = 20_000_000 // 20 USDC in micro-units
 
 export const POST = withAuth(async (req, { walletAddress }) => {
   const body = await req.json().catch(() => ({}))

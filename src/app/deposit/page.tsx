@@ -22,7 +22,7 @@ export default function DepositPage() {
 
   if (!ready) return <div className="min-h-screen bg-[#F5F0E8]" />
 
-  const numPacks = Math.floor(parseFloat(amount || '0') / 100)
+  const numPacks = Math.floor(parseFloat(amount || '0') / 20)
 
   const handleDeposit = async () => {
     const dollars = parseFloat(amount)
@@ -76,6 +76,10 @@ export default function DepositPage() {
         // tx already processed — navigate home, packs may already be credited
         setErrorMsg('This transaction was already processed. Check your packs!')
         setTimeout(() => router.replace('/'), 2000)
+      } else if (txSignature) {
+        // tx was signed and sent — money is on-chain even if our server couldn't confirm yet
+        setErrorMsg('Your deposit is on its way! Your balance will update shortly.')
+        setTimeout(() => router.replace('/'), 2500)
       } else {
         setErrorMsg(err instanceof Error ? err.message : 'Deposit failed. Please try again.')
         setStatus('error')
@@ -111,10 +115,22 @@ export default function DepositPage() {
           <input
             type="number" min={MIN_DEPOSIT} step="1" value={amount}
             onChange={(e) => setAmount(e.target.value)} disabled={isProcessing}
-            placeholder="100"
+            placeholder="20"
             className="w-full text-4xl font-bold text-[#1A1A1A] bg-transparent outline-none mb-4"
             style={{ fontFamily: 'Fredoka' }}
           />
+          <div className="flex gap-2 mb-4">
+            {[20, 50, 100].map((preset) => (
+              <button key={preset} onClick={() => setAmount(String(preset))} disabled={isProcessing}
+                className={`flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
+                  amount === String(preset)
+                    ? 'bg-[#F0C430] border-[#F0C430] text-[#1A1A1A]'
+                    : 'bg-[#F5F0E8] border-[#1A1A1A]/10 text-[#1A1A1A]/60 hover:border-[#F0C430]/60'
+                }`}>
+                ${preset}
+              </button>
+            ))}
+          </div>
           {numPacks > 0 && (
             <div className="bg-[#F0C430]/20 rounded-2xl p-4 border-2 border-[#F0C430]/30 flex items-center gap-3">
               <span className="text-2xl flex-shrink-0">🎁</span>

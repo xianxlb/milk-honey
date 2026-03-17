@@ -9,17 +9,29 @@ export function getConnection(): Connection {
   return _connection
 }
 
-// Verifies a transaction signature by fetching it from the chain.
-// Uses getTransaction (not confirmTransaction) to handle already-confirmed txs correctly.
+// Verifies a transaction signature by checking its status on-chain.
+// Uses getSignatureStatuses (faster to propagate than getTransaction) with retries.
 export async function verifyTx(signature: string): Promise<boolean> {
   const connection = getConnection()
-  try {
-    const tx = await connection.getTransaction(signature, {
-      commitment: 'confirmed',
-      maxSupportedTransactionVersion: 0,
-    })
-    return tx !== null && tx.meta?.err === null
-  } catch {
-    return false
+  const MAX_ATTEMPTS = 6
+  const DELAY_MS = 2000
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
+      const { value } = await connection.getSignatureStatuses([signature], {
+        searchTransactionHistory: true,
+      })
+      const status = value[0]
+      if (status !== null && status.err === null &&
+        (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized')) {
+        return true
+      }
+    } catch {
+      // RPC error — try again
+    }
+    if (attempt < MAX_ATTEMPTS - 1) {
+      await new Promise(resolve => setTimeout(resolve, DELAY_MS))
+    }
   }
+  return false
 }

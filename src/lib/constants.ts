@@ -1,6 +1,6 @@
 import { BuildingTypeConfig } from '@/store/types'
 
-export const LEVEL_THRESHOLDS = [100, 200, 400, 800, 1600, 3200, 6400, 12800] as const
+export const LEVEL_THRESHOLDS = [20, 40, 80, 160, 320, 640, 1280, 2560] as const
 export const MAX_LEVEL = 8
 export const MIN_DEPOSIT = 1
 export const MAX_BUILDINGS = 20
