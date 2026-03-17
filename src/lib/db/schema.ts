@@ -17,7 +17,7 @@ export const deposits = pgTable('deposits', {
 export const cards = pgTable('cards', {
   id: uuid('id').primaryKey().defaultRandom(),
   wallet_address: text('wallet_address').notNull().references(() => users.wallet_address),
-  building_type: text('building_type').notNull(),
+  animal_type: text('animal_type').notNull(),
   level: integer('level').notNull().default(1),
   created_at: timestamp('created_at').defaultNow().notNull(),
 })
