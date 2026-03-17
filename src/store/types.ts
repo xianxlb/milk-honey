@@ -1,32 +1,34 @@
-export type BuildingType = 'bakery' | 'bookshop' | 'cafe' | 'house' | 'pet-shop'
-export type BuildingStatus = 'active' | 'wilting'
+import { AnimalType } from '@/lib/animals'
+
+export type { AnimalType }
+export type AnimalStatus = 'active' | 'wilting'
 export type YieldSource = 'jupiter' | 'voltr'
 
-export interface Building {
+export interface Animal {
   id: string
-  type: BuildingType
+  type: AnimalType
   totalValue: number
   depositValue: number
   yieldEarned: number
   uncollectedYield: number
   level: number
   pendingLevelUp: boolean
-  status: BuildingStatus
+  status: AnimalStatus
   wiltingStartedAt: number | null
   yieldSource: YieldSource
   createdAt: number
 }
 
-export interface CityState {
-  buildings: Building[]
+export interface CrewState {
+  animals: Animal[]
   tokens: number
   lastVisitAt: number | null
   spawnTimestamps: number[]
   prosperityValue: number
 }
 
-export interface BuildingTypeConfig {
-  type: BuildingType
+export interface AnimalTypeConfig {
+  type: AnimalType
   name: string
   emoji: string
   unlockProsperity: number
