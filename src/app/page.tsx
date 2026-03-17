@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { Sparkles, Plus } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { ensureUser, getPortfolio } from '@/lib/client-api'
-import { getBuildingEmoji, getBuildingImage, getBuildingName } from '@/lib/building-images'
+import { getAnimalEmoji, getAnimalImage } from '@/lib/animal-images'
+import { getAnimalName, type AnimalType } from '@/lib/animals'
 
 export default function HomePage() {
   const { ready, authenticated, getAccessToken, walletAddress } = useAuth()
@@ -108,6 +109,8 @@ export default function HomePage() {
   const amountUntilReward = Math.max(0, nextMilestone - totalDollars)
   const gridClass = cards.length <= 6 ? 'grid-cols-2' : 'grid-cols-3'
 
+  type Card = { id: string; animal_type: string; level: number }
+
   return (
     <div className="min-h-screen bg-[#F5F0E8] pb-24">
       {/* Header */}
@@ -169,34 +172,44 @@ export default function HomePage() {
         )}
 
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1" style={{ fontFamily: 'Fredoka' }}>Your Village</h2>
+          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1" style={{ fontFamily: 'Fredoka' }}>Your Crew</h2>
           <p className="text-[#1A1A1A]/50 font-medium">{cards.length} building{cards.length !== 1 ? 's' : ''}</p>
         </div>
 
         {cards.length === 0 ? (
           <div className="bg-[#FBF8F2] rounded-2xl border-2 border-dashed border-[#1A1A1A]/15 p-8 mb-8 text-center">
             <img src="/mascot.png" alt="Mascot" className="w-20 h-20 mx-auto mb-3 opacity-60" />
-            <p className="text-[#1A1A1A]/70 font-semibold mb-1">No buildings yet</p>
-            <p className="text-sm text-[#1A1A1A]/40">Deposit $20 USDC to unlock your first building!</p>
+            <p className="text-[#1A1A1A]/70 font-semibold mb-1">No crew yet</p>
+            <p className="text-sm text-[#1A1A1A]/40">Deposit $20 to meet your first crew member!</p>
           </div>
         ) : (
           <div className={`grid ${gridClass} gap-4 mb-8`}>
-            {cards.map((card: any) => (
-              <Link key={card.id} href={`/building/${card.id}`}
-                className="relative bg-[#FBF8F2] rounded-2xl p-3 shadow-md border-2 border-[#1A1A1A]/8 hover:scale-105 hover:shadow-lg transition-all active:scale-95">
-                <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC] rounded-xl mb-2 overflow-hidden flex items-center justify-center">
-                  {getBuildingImage(card.building_type) ? (
-                    <img src={getBuildingImage(card.building_type)!} alt={getBuildingName(card.building_type)} className="w-full h-full object-contain" />
-                  ) : (
-                    <span className="text-5xl">{getBuildingEmoji(card.building_type)}</span>
+            {cards.map((card: Card) => {
+              const img = getAnimalImage(card.animal_type, card.level)
+              const canMerge = cards.some(
+                (other: Card) => other.id !== card.id && other.animal_type === card.animal_type && other.level === card.level
+              )
+              return (
+                <Link key={card.id} href={`/animal/${card.id}`}
+                  className="relative bg-[#FBF8F2] rounded-2xl p-3 shadow-md border-2 border-[#1A1A1A]/8 hover:scale-105 hover:shadow-lg transition-all active:scale-95">
+                  {canMerge && (
+                    <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#F0C430] rounded-full flex items-center justify-center border-2 border-white z-10">
+                      <span className="text-[8px] font-bold text-[#1A1A1A]">↑</span>
+                    </div>
                   )}
-                </div>
-                <div className="text-center">
-                  <p className="text-xs font-semibold text-[#1A1A1A] truncate">{getBuildingName(card.building_type)}</p>
-                  <p className="text-[10px] text-[#1A1A1A]/40 font-medium">Lv.{card.level}</p>
-                </div>
-              </Link>
-            ))}
+                  <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC] rounded-xl mb-2 overflow-hidden flex items-center justify-center">
+                    {img
+                      ? <img src={img} alt={card.animal_type} className="w-full h-full object-contain" />
+                      : <span className="text-5xl">{getAnimalEmoji(card.animal_type)}</span>
+                    }
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-semibold text-[#1A1A1A] truncate">{getAnimalName(card.animal_type as AnimalType)}</p>
+                    <p className="text-[10px] text-[#1A1A1A]/40 font-medium">Lv.{card.level}</p>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         )}
 
