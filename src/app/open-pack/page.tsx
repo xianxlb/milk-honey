@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { openPack } from '@/lib/client-api'
 import { getAnimalEmoji, getAnimalImage } from '@/lib/animal-images'
 import { getAnimalName, type AnimalType } from '@/lib/animals'
+import { IntroDialogue } from '@/components/IntroDialogue'
 
 type Card = { id: string; animal_type: string; level: number }
 
@@ -22,6 +23,7 @@ function OpenPackContent() {
   const [isDragging, setIsDragging] = useState(false)
   const [revealedCard, setRevealedCard] = useState<Card | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showIntro, setShowIntro] = useState(false)
   const cutAreaRef = useRef<HTMLDivElement>(null)
 
   const getRemainingPacks = (): string[] => {
@@ -68,6 +70,11 @@ function OpenPackContent() {
       const token = await getAccessToken()
       const result = await openPack(token!, packId)
       setRevealedCard(result.card)
+      // Check if user has seen this animal before
+      const seenKey = `intro_seen_${result.card.animal_type}`
+      if (!localStorage.getItem(seenKey)) {
+        setShowIntro(true)
+      }
       setTimeout(() => setStage('revealed'), 1000)
     } catch (err) {
       console.error('Failed to open pack:', err)
@@ -191,6 +198,17 @@ function OpenPackContent() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showIntro && revealedCard && (
+        <IntroDialogue
+          animalType={revealedCard.animal_type as AnimalType}
+          level={revealedCard.level}
+          onDismiss={() => {
+            localStorage.setItem(`intro_seen_${revealedCard.animal_type}`, '1')
+            setShowIntro(false)
+          }}
+        />
+      )}
     </div>
   )
 }
