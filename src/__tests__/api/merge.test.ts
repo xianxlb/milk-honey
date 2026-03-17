@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/auth', () => ({ withAuth: (h: Function) => h }))
 
-const makeCard = (id: string, level = 1, type = 'bakery') => ({
-  id, wallet_address: 'wallet123', building_type: type, level, created_at: new Date(),
+const makeCard = (id: string, level = 1, type = 'cow') => ({
+  id, wallet_address: 'wallet123', animal_type: type, level, created_at: new Date(),
 })
 
 let selectCallCount = 0
@@ -61,8 +61,8 @@ describe('POST /api/cards/merge', () => {
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockImplementation(() => {
           selectCallCount++
-          if (selectCallCount === 1) return Promise.resolve([makeCard('card-1', 1, 'bakery')])
-          return Promise.resolve([makeCard('card-2', 1, 'bookshop')])
+          if (selectCallCount === 1) return Promise.resolve([makeCard('card-1', 1, 'cow')])
+          return Promise.resolve([makeCard('card-2', 1, 'dog')])
         }),
       }),
     }))

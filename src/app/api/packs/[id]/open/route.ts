@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { and, eq, isNull } from 'drizzle-orm'
 import { withAuth } from '@/lib/auth'
 import { db, packs, cards } from '@/lib/db'
-import { BUILDING_TYPES } from '@/lib/constants'
+import { ANIMAL_TYPE_CONFIGS } from '@/lib/constants'
 
 export const POST = withAuth(async (_req, { walletAddress, params }) => {
   const packId = params?.id
@@ -13,10 +13,10 @@ export const POST = withAuth(async (_req, { walletAddress, params }) => {
   )
   if (!pack) return NextResponse.json({ error: 'Pack not found or already opened' }, { status: 404 })
 
-  const buildingType = BUILDING_TYPES[Math.floor(Math.random() * BUILDING_TYPES.length)].type
+  const animalType = ANIMAL_TYPE_CONFIGS[Math.floor(Math.random() * ANIMAL_TYPE_CONFIGS.length)].type
 
   const [card] = await db.insert(cards)
-    .values({ wallet_address: walletAddress, building_type: buildingType, level: 1 })
+    .values({ wallet_address: walletAddress, animal_type: animalType, level: 1 })
     .returning()
 
   await db.update(packs)
