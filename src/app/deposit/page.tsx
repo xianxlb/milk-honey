@@ -33,6 +33,7 @@ export default function DepositPage() {
     const amountUsdc = Math.floor(dollars * 1_000_000)
     setErrorMsg(null)
 
+    let txSignature: string | undefined
     try {
       // Step 1: Get serialized tx from our backend (calls Lulo API server-side)
       setStatus('building-tx')
@@ -54,7 +55,7 @@ export default function DepositPage() {
         wallet,
         options: { commitment: 'confirmed' },
       })
-      const txSignature = bs58.encode(output.signature)
+      txSignature = bs58.encode(output.signature)
 
       // Step 3: Verify on our backend → credit packs
       setStatus('verifying')
