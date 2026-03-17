@@ -112,8 +112,8 @@ function OpenPackContent() {
                   <div className="w-24 h-24 bg-[#F0C430] rounded-full flex items-center justify-center mb-4 border-4 border-[#1A1A1A]/10">
                     <span className="text-5xl">🎁</span>
                   </div>
-                  <h2 className="text-3xl font-bold text-white text-center" style={{ fontFamily: 'Fredoka' }}>Animal Pack</h2>
-                  <p className="text-white/60 text-sm mt-2 font-medium">Contains 1 random animal</p>
+                  <h2 className="text-3xl font-bold text-white text-center" style={{ fontFamily: 'Fredoka' }}>Crew Pack</h2>
+                  <p className="text-white/60 text-sm mt-2 font-medium">Contains 1 new crew member</p>
                 </div>
                 <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" animate={{ x: ['-100%', '200%'] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }} />
                 <div ref={cutAreaRef} className="absolute top-0 left-0 right-0 h-24 cursor-grab active:cursor-grabbing z-20"
@@ -158,7 +158,7 @@ function OpenPackContent() {
                 <div className="bg-[#FBF8F2] rounded-3xl shadow-2xl p-6 border-4 border-[#F0C430]">
                   <div className="flex justify-center mb-4">
                     <div className="bg-[#F0C430] px-6 py-2 rounded-full border-2 border-[#1A1A1A]/10">
-                      <p className="text-[#1A1A1A] font-bold text-sm">NEW ANIMAL!</p>
+                      <p className="text-[#1A1A1A] font-bold text-sm">NEW CREW MEMBER!</p>
                     </div>
                   </div>
                   <div className="relative mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC] p-4">
@@ -175,7 +175,7 @@ function OpenPackContent() {
                     <h3 className="text-3xl font-bold text-[#1A1A1A] mb-2" style={{ fontFamily: 'Fredoka' }}>{getAnimalName(revealedCard.animal_type as AnimalType)}</h3>
                     <div className="flex items-center justify-center gap-2 text-[#1A1A1A]/50">
                       <Sparkles className="w-4 h-4 text-[#F0C430]" />
-                      <p className="text-sm font-semibold">Level {revealedCard.level} Animal</p>
+                      <p className="text-sm font-semibold">Level {revealedCard.level}</p>
                       <Sparkles className="w-4 h-4 text-[#F0C430]" />
                     </div>
                   </div>
@@ -186,7 +186,7 @@ function OpenPackContent() {
             <motion.button initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 1 }}
               onClick={handleNext}
               className="w-full mt-6 py-4 bg-[#F0C430] text-[#1A1A1A] rounded-2xl font-bold shadow-lg border-2 border-[#1A1A1A]/10 hover:shadow-xl active:scale-95 transition-all">
-              {remaining > 0 ? `Next Pack (${remaining} remaining)` : 'Add to Village'}
+              {remaining > 0 ? `Next Pack (${remaining} remaining)` : 'Meet the Crew'}
             </motion.button>
           </motion.div>
         )}
