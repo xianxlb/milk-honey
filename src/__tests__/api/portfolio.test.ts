@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/auth', () => ({ withAuth: (h: Function) => h }))
-vi.mock('@/lib/lulo', () => ({ readPosition: vi.fn().mockResolvedValue(105_000_000) }))
+vi.mock('@/lib/lulo', () => ({
+  readPosition: vi.fn().mockResolvedValue(105_000_000),
+  readApy: vi.fn().mockResolvedValue(5.5),
+}))
 
 const mockDb = {
   select: vi.fn(),
@@ -29,7 +32,7 @@ describe('GET /api/portfolio', () => {
     expect(body).toHaveProperty('cards')
     expect(body).toHaveProperty('packs')
     expect(body).toHaveProperty('stats')
-    expect(body.stats.apyPercent).toBe(5)
+    expect(body.stats.apyPercent).toBe(5.5)
   })
 
   it('calculates yield as position minus total deposited', async () => {

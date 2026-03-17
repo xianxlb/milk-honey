@@ -28,33 +28,13 @@ const makeBuilding = (overrides: Partial<Building> = {}): Building => ({
 })
 
 describe('calculateLevel', () => {
-  it('returns 1 for exactly 100', () => {
-    expect(calculateLevel(100)).toBe(1)
-  })
-
-  it('returns 1 for 199', () => {
-    expect(calculateLevel(199)).toBe(1)
-  })
-
-  it('returns 2 for 200', () => {
-    expect(calculateLevel(200)).toBe(2)
-  })
-
-  it('returns 4 for 800', () => {
-    expect(calculateLevel(800)).toBe(4)
-  })
-
-  it('returns 8 for 12800', () => {
-    expect(calculateLevel(12800)).toBe(8)
-  })
-
-  it('caps at 8 for values above max threshold', () => {
-    expect(calculateLevel(50000)).toBe(8)
-  })
-
-  it('returns 0 for values below min threshold', () => {
-    expect(calculateLevel(50)).toBe(0)
-  })
+  it('returns 1 for exactly 20', () => { expect(calculateLevel(20)).toBe(1) })
+  it('returns 1 for 39', () => { expect(calculateLevel(39)).toBe(1) })
+  it('returns 2 for 40', () => { expect(calculateLevel(40)).toBe(2) })
+  it('returns 4 for 160', () => { expect(calculateLevel(160)).toBe(4) })
+  it('returns 8 for 2560', () => { expect(calculateLevel(2560)).toBe(8) })
+  it('caps at 8 for values above max threshold', () => { expect(calculateLevel(50000)).toBe(8) })
+  it('returns 0 for values below min threshold', () => { expect(calculateLevel(10)).toBe(0) })
 })
 
 describe('canSpawnBuilding', () => {
@@ -150,21 +130,15 @@ describe('getAvailableBuildingTypes', () => {
 })
 
 describe('validateDeposit', () => {
-  it('rejects $99 for spawn', () => {
-    const result = validateDeposit(99, 'spawn')
-    expect(result.valid).toBe(false)
+  it('accepts $1 for spawn (MIN_DEPOSIT)', () => {
+    expect(validateDeposit(1, 'spawn').valid).toBe(true)
   })
-
-  it('accepts $100 for spawn', () => {
-    const result = validateDeposit(100, 'spawn')
-    expect(result.valid).toBe(true)
+  it('rejects $0 for spawn', () => {
+    expect(validateDeposit(0, 'spawn').valid).toBe(false)
   })
-
   it('accepts $1 for upgrade', () => {
-    const result = validateDeposit(1, 'upgrade')
-    expect(result.valid).toBe(true)
+    expect(validateDeposit(1, 'upgrade').valid).toBe(true)
   })
-
   it('rejects $0 for any action', () => {
     expect(validateDeposit(0, 'spawn').valid).toBe(false)
     expect(validateDeposit(0, 'upgrade').valid).toBe(false)
