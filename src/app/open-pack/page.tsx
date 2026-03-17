@@ -70,12 +70,14 @@ function OpenPackContent() {
       const token = await getAccessToken()
       const result = await openPack(token!, packId)
       setRevealedCard(result.card)
-      // Check if user has seen this animal before
-      const seenKey = `intro_seen_${result.card.animal_type}`
-      if (!localStorage.getItem(seenKey)) {
-        setShowIntro(true)
-      }
-      setTimeout(() => setStage('revealed'), 1000)
+      setTimeout(() => {
+        setStage('revealed')
+        // Check if user has seen this animal before
+        const seenKey = `intro_seen_${result.card.animal_type}`
+        if (!localStorage.getItem(seenKey)) {
+          setShowIntro(true)
+        }
+      }, 1000)
     } catch (err) {
       console.error('Failed to open pack:', err)
       setError('Failed to open pack')

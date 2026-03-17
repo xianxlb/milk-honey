@@ -7,11 +7,12 @@ const makeCard = (id: string, level = 1, type = 'cow') => ({
 })
 
 let selectCallCount = 0
-const mockDb = {
+const mockDb: Record<string, ReturnType<typeof vi.fn>> = {
   select: vi.fn(),
   insert: vi.fn(),
   delete: vi.fn(),
   update: vi.fn(),
+  transaction: vi.fn(),
 }
 
 vi.mock('@/lib/db', () => ({ db: mockDb, cards: {}, packs: {} }))
@@ -33,6 +34,7 @@ beforeEach(() => {
   mockDb.insert.mockReturnValue({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([makeCard('card-3', 2)]) }) })
   mockDb.delete.mockReturnValue({ where: vi.fn().mockResolvedValue([]) })
   mockDb.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }) })
+  mockDb.transaction.mockImplementation((cb: (tx: typeof mockDb) => Promise<unknown>) => cb(mockDb))
 })
 
 describe('POST /api/cards/merge', () => {

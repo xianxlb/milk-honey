@@ -24,12 +24,13 @@ export const POST = withAuth(async (req, { walletAddress }) => {
     return NextResponse.json({ error: 'Animals cannot be merged (different type, level, or max level reached)' }, { status: 422 })
   }
 
-  await db.update(packs).set({ card_id: null }).where(or(eq(packs.card_id, cardId1), eq(packs.card_id, cardId2)))
-  await db.delete(cards).where(or(eq(cards.id, cardId1), eq(cards.id, cardId2)))
-
-  const [merged] = await db.insert(cards)
-    .values({ wallet_address: walletAddress, animal_type: c1.animal_type, level: c1.level + 1 })
-    .returning()
+  const [merged] = await db.transaction(async (tx) => {
+    await tx.update(packs).set({ card_id: null }).where(or(eq(packs.card_id, cardId1), eq(packs.card_id, cardId2)))
+    await tx.delete(cards).where(or(eq(cards.id, cardId1), eq(cards.id, cardId2)))
+    return tx.insert(cards)
+      .values({ wallet_address: walletAddress, animal_type: c1.animal_type, level: c1.level + 1 })
+      .returning()
+  })
 
   return NextResponse.json({ card: merged })
 })

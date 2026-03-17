@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { getPortfolio, mergeCards } from '@/lib/client-api'
 import { getAnimalEmoji, getAnimalImage } from '@/lib/animal-images'
 import { getAnimalName, getAnimalPersonality, getAnimalDialogue, type AnimalType } from '@/lib/animals'
+import { MAX_LEVEL } from '@/lib/constants'
 
 type Card = { id: string; animal_type: string; level: number }
 
@@ -69,7 +70,7 @@ export default function AnimalDetailPage({ params }: { params: Promise<{ id: str
   }
 
   if (!card) return null
-  const canMerge = sameCards.length > 0 && card.level < 8
+  const canMerge = sameCards.length > 0 && card.level < MAX_LEVEL
   const animalType = card.animal_type as AnimalType
   const img = getAnimalImage(card.animal_type, card.level)
 
