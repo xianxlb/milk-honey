@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { ensureUser, getPortfolio } from '@/lib/client-api'
 import { getAnimalEmoji, getAnimalImage } from '@/lib/animal-images'
 import { getAnimalName, type AnimalType } from '@/lib/animals'
+import { RaccoonEvent } from '@/components/RaccoonEvent'
 
 export default function HomePage() {
   const { ready, authenticated, getAccessToken, walletAddress } = useAuth()
@@ -170,6 +171,11 @@ export default function HomePage() {
             </div>
           </Link>
         )}
+
+        <RaccoonEvent
+          lastDepositAt={portfolio?.lastDepositAt ? new Date(portfolio.lastDepositAt) : null}
+          hasAnimals={(portfolio?.cards?.length ?? 0) > 0}
+        />
 
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1" style={{ fontFamily: 'Fredoka' }}>Your Crew</h2>
