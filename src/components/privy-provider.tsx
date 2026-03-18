@@ -36,14 +36,15 @@ export function AppPrivyProvider({ children }: { children: React.ReactNode }) {
         externalWallets: {
           solana: { connectors: solanaConnectors },
         },
-        solana: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        solana: solanaRpc ? {
           rpcs: {
             'solana:mainnet': {
-              rpc: solanaRpc!,
-              rpcSubscriptions: solanaRpcSubscriptions!,
+              rpc: solanaRpc as any,
+              rpcSubscriptions: solanaRpcSubscriptions as any,
             },
           },
-        },
+        } : undefined,
       }}
     >
       {children}
