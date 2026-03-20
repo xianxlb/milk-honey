@@ -2,11 +2,12 @@ import type { Metadata, Viewport } from 'next'
 
 export const dynamic = 'force-dynamic'
 import './globals.css'
-import { AppPrivyProvider } from '@/components/privy-provider'
+import { AppWeb3AuthProvider } from '@/components/web3auth-provider'
+import { PortfolioProvider } from '@/contexts/portfolio-context'
 
 export const metadata: Metadata = {
   title: 'Milk & Honey',
-  description: 'Build your village while earning yield',
+  description: 'Gather your crew while earning yield',
   manifest: '/manifest.json',
 }
 
@@ -21,7 +22,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="antialiased max-w-md mx-auto"><AppPrivyProvider>{children}</AppPrivyProvider></body>
+      <body className="antialiased max-w-md mx-auto"><AppWeb3AuthProvider><PortfolioProvider>{children}</PortfolioProvider></AppWeb3AuthProvider></body>
     </html>
   )
 }

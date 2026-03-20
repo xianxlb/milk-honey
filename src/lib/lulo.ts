@@ -33,7 +33,9 @@ export async function generateDepositTx({
 // Returns current APY as a percentage (e.g. 5.46 = 5.46%). Returns 0 on error.
 export async function readApy(): Promise<number> {
   try {
-    const res = await fetch(`${LULO_BASE_URL}/rates.getRates`)
+    const res = await fetch(`${LULO_BASE_URL}/rates.getRates`, {
+      next: { revalidate: 60 }, // APY changes slowly — cache 60s across all requests
+    })
     if (!res.ok) return 0
     const data = await res.json()
     return (data.regular?.CURRENT as number) ?? 0
@@ -48,7 +50,10 @@ export async function readPosition(walletAddress: string): Promise<number> {
   try {
     const res = await fetch(
       `${LULO_BASE_URL}/account.getAccount?owner=${walletAddress}`,
-      { headers: { 'x-api-key': LULO_API_KEY } },
+      {
+        headers: { 'x-api-key': LULO_API_KEY },
+        next: { revalidate: 20 }, // cache position per wallet for 20s
+      },
     )
     if (!res.ok) return 0
     const data = await res.json()
@@ -57,4 +62,75 @@ export async function readPosition(walletAddress: string): Promise<number> {
   } catch {
     return 0
   }
+}
+
+export async function generateWithdrawInitiateTx({
+  walletAddress,
+  amountUsdc,
+}: {
+  walletAddress: string
+  amountUsdc: number
+}): Promise<string> {
+  const res = await fetch(`${LULO_BASE_URL}/generate.transactions.initiateRegularWithdraw`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': LULO_API_KEY },
+    body: JSON.stringify({
+      owner: walletAddress,
+      mintAddress: USDC_MINT,
+      amount: amountUsdc / 1_000_000,
+    }),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Lulo API error ${res.status}: ${text}`)
+  }
+  const data = await res.json()
+  return data.transaction as string
+}
+
+export interface ReferrerData {
+  code: string
+  bonusApyPct: number
+  numReferrals: number
+  pendingReferralEarnings: number
+}
+
+export async function getReferrer(walletAddress: string): Promise<ReferrerData | null> {
+  try {
+    const res = await fetch(
+      `${LULO_BASE_URL}/referral.getReferrer?owner=${walletAddress}`,
+      { headers: { 'x-api-key': LULO_API_KEY } },
+    )
+    if (!res.ok) return null
+    const data = await res.json()
+    return {
+      code: data.code ?? '',
+      bonusApyPct: data.bonusApyPct ?? 0,
+      numReferrals: data.numReferrals ?? 0,
+      pendingReferralEarnings: data.pendingReferralEarnings ?? 0,
+    }
+  } catch {
+    return null
+  }
+}
+
+export async function generateWithdrawCompleteTx({
+  walletAddress,
+}: {
+  walletAddress: string
+}): Promise<string> {
+  const res = await fetch(`${LULO_BASE_URL}/generate.transactions.completeRegularWithdraw`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': LULO_API_KEY },
+    body: JSON.stringify({
+      owner: walletAddress,
+      mintAddress: USDC_MINT,
+    }),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Lulo API error ${res.status}: ${text}`)
+  }
+  const data = await res.json()
+  return data.transaction as string
 }

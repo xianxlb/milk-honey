@@ -3,19 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
-import { usePrivy, type WalletWithMetadata } from '@privy-io/react-auth'
 import { useAuth } from '@/hooks/use-auth'
-import { getDepositTx, verifyDeposit } from '@/lib/client-api'
+import { BottomNav } from '@/components/bottom-nav'
+import { getDepositTx } from '@/lib/client-api'
 import { MIN_DEPOSIT } from '@/lib/constants'
-import { useWallets, useSignAndSendTransaction } from '@privy-io/react-auth/solana'
-import bs58 from 'bs58'
+import { useTransactionSender } from '@/hooks/use-transaction-sender'
 
 export default function DepositPage() {
   const router = useRouter()
-  const { user } = usePrivy()
   const { ready, getAccessToken } = useAuth()
-  const { wallets } = useWallets()
-  const { signAndSendTransaction } = useSignAndSendTransaction()
+  const { sendTx } = useTransactionSender()
   const [amount, setAmount] = useState('')
   const [status, setStatus] = useState<'idle' | 'building-tx' | 'signing' | 'verifying' | 'done' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -27,7 +24,7 @@ export default function DepositPage() {
   const handleDeposit = async () => {
     const dollars = parseFloat(amount)
     if (!dollars || dollars < MIN_DEPOSIT) {
-      setErrorMsg(`Minimum deposit is $${MIN_DEPOSIT} USDC`)
+      setErrorMsg(`Minimum deposit is $${MIN_DEPOSIT}`)
       return
     }
     const amountUsdc = Math.floor(dollars * 1_000_000)
@@ -35,77 +32,52 @@ export default function DepositPage() {
 
     let txSignature: string | undefined
     try {
-      // Step 1: Get serialized tx from our backend (calls Lulo API server-side)
       setStatus('building-tx')
       const token = await getAccessToken()
       if (!token) throw new Error('Not authenticated')
       const { transaction: txBase64 } = await getDepositTx(token, amountUsdc)
 
-      // Step 2: Sign and send — prefer external wallet (e.g. Jupiter Mobile) over embedded
       setStatus('signing')
-      const embeddedAddress = (user?.linkedAccounts as WalletWithMetadata[] | undefined)
-        ?.find(a => a.type === 'wallet' && a.walletClientType === 'privy' && a.chainType === 'solana')
-        ?.address
-      const wallet = wallets.find(w => w.address !== embeddedAddress) ?? wallets[0]
-      if (!wallet) throw new Error('No Solana wallet connected')
+      txSignature = await sendTx(txBase64)
 
-      const txBytes = new Uint8Array(Buffer.from(txBase64, 'base64'))
-      const output = await signAndSendTransaction({
-        transaction: txBytes,
-        wallet,
-        options: { commitment: 'confirmed' },
-      })
-      txSignature = bs58.encode(output.signature)
-
-      // Step 3: Verify on our backend → credit packs
-      setStatus('verifying')
-      const result = await verifyDeposit(token, txSignature, amountUsdc)
-
-      // Step 4: Navigate to pack opening
+      sessionStorage.setItem('pending_verification', JSON.stringify({ txSignature, amountUsdc }))
       setStatus('done')
-      if (result.packs?.length > 0) {
-        const packIds = result.packs.map((p: { id: string }) => p.id)
-        sessionStorage.setItem('pending_packs', JSON.stringify(packIds))
-        router.replace(`/open-pack?packId=${packIds[0]}`)
-      } else {
-        router.replace('/')
-      }
+      router.replace('/')
     } catch (err: unknown) {
       console.error('Deposit failed:', err)
-      const errStatus = (err as { status?: number }).status
-      if (errStatus === 409) {
-        // tx already processed — navigate home, packs may already be credited
-        setErrorMsg('This transaction was already processed. Check your packs!')
-        setTimeout(() => router.replace('/'), 2000)
-      } else if (txSignature) {
-        // tx was signed and sent — money is on-chain even if our server couldn't confirm yet
-        setErrorMsg('Your deposit is on its way! Your balance will update shortly.')
-        setTimeout(() => router.replace('/'), 2500)
+      if (txSignature) {
+        sessionStorage.setItem('pending_verification', JSON.stringify({ txSignature, amountUsdc }))
+        router.replace('/')
       } else {
-        setErrorMsg(err instanceof Error ? err.message : 'Deposit failed. Please try again.')
+        const msg = err instanceof Error ? err.message : ''
+        if (msg === 'Not authenticated') {
+          setErrorMsg('Please sign in and try again.')
+        } else {
+          setErrorMsg('Something went wrong. Please try again.')
+        }
         setStatus('error')
       }
     }
   }
 
-  const isProcessing = ['building-tx', 'signing', 'verifying'].includes(status)
+  const isProcessing = ['building-tx', 'signing'].includes(status)
   const statusLabel: Record<string, string> = {
-    'building-tx': 'Preparing transaction...',
-    signing: 'Waiting for wallet signature...',
-    verifying: 'Confirming on-chain...',
+    'building-tx': 'Getting things ready...',
+    signing: 'Waiting for your approval...',
+    verifying: 'Your crew is on the way...',
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] flex flex-col">
+    <div className="min-h-screen bg-[#F5F0E8] flex flex-col pb-20">
       <header className="bg-[#FBF8F2] border-b-2 border-[#1A1A1A]/5 px-6 py-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} disabled={isProcessing}
+          <button onClick={() => router.push('/')} disabled={isProcessing}
             className="w-10 h-10 rounded-xl bg-[#F5F0E8] flex items-center justify-center border-2 border-[#1A1A1A]/8">
             <ArrowLeft className="w-5 h-5 text-[#1A1A1A]" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-[#1A1A1A]" style={{ fontFamily: 'Fredoka' }}>Deposit USDC</h1>
-            <p className="text-sm text-[#1A1A1A]/50 font-medium">Earn real yield with Lulo</p>
+            <h1 className="text-xl font-bold text-[#1A1A1A]" style={{ fontFamily: 'Fredoka' }}>Add Money</h1>
+            <p className="text-sm text-[#1A1A1A]/50 font-medium">Earn interest on your savings</p>
           </div>
         </div>
       </header>
@@ -136,7 +108,7 @@ export default function DepositPage() {
             <div className="bg-[#F0C430]/20 rounded-2xl p-4 border-2 border-[#F0C430]/30 flex items-center gap-3">
               <span className="text-2xl flex-shrink-0">🎁</span>
               <p className="text-sm text-[#1A1A1A] font-semibold">
-                You&apos;ll unlock {numPacks} new building{numPacks > 1 ? 's' : ''}!
+                You&apos;ll get {numPacks} new crew member{numPacks > 1 ? 's' : ''}!
               </p>
             </div>
           )}
@@ -149,7 +121,7 @@ export default function DepositPage() {
         )}
       </main>
 
-      <div className="sticky bottom-0 bg-[#FBF8F2] border-t-2 border-[#1A1A1A]/5 px-6 py-4">
+      <div className="sticky bottom-16 bg-[#FBF8F2] border-t-2 border-[#1A1A1A]/5 px-6 py-4">
         <button onClick={handleDeposit} disabled={!amount || isProcessing}
           className={`w-full py-4 px-6 rounded-2xl font-bold shadow-lg transition-all border-2 ${
             amount && !isProcessing
@@ -166,6 +138,7 @@ export default function DepositPage() {
           )}
         </button>
       </div>
+      <BottomNav />
     </div>
   )
 }

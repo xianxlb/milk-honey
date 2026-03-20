@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { and, eq, or } from 'drizzle-orm'
 import { withAuth } from '@/lib/auth'
 import { db, cards, packs } from '@/lib/db'
-import { canMergeAnimals } from '@/lib/game-logic'
+import { MAX_LEVEL } from '@/lib/constants'
 
 export const POST = withAuth(async (req, { walletAddress }) => {
   const body = await req.json().catch(() => ({}))
@@ -17,10 +17,7 @@ export const POST = withAuth(async (req, { walletAddress }) => {
 
   if (!c1 || !c2) return NextResponse.json({ error: 'Card not found' }, { status: 404 })
 
-  const a1 = { id: c1.id, type: c1.animal_type, level: c1.level, totalValue: 0 }
-  const a2 = { id: c2.id, type: c2.animal_type, level: c2.level, totalValue: 0 }
-
-  if (!canMergeAnimals(a1 as any, a2 as any)) {
+  if (c1.animal_type !== c2.animal_type || c1.level !== c2.level || c1.level >= MAX_LEVEL) {
     return NextResponse.json({ error: 'Animals cannot be merged (different type, level, or max level reached)' }, { status: 422 })
   }
 

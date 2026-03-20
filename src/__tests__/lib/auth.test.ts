@@ -1,64 +1,89 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Capture mock instances by reference rather than relying on mock.results index
-const mockVerifyAuthToken = vi.fn()
-const mockGetUser = vi.fn()
+const mockJwtVerify = vi.fn()
 
-vi.mock('@privy-io/server-auth', () => ({
-  PrivyClient: vi.fn().mockImplementation(function () {
-    return {
-      verifyAuthToken: mockVerifyAuthToken,
-      getUser: mockGetUser,
-    }
-  }),
+vi.mock('jose', () => ({
+  createRemoteJWKSet: vi.fn(() => ({})),
+  jwtVerify: mockJwtVerify,
 }))
 
-const { verifyPrivyJwt } = await import('@/lib/auth')
+const { withAuth } = await import('@/lib/auth')
 
-beforeEach(() => {
-  vi.clearAllMocks()
-})
+beforeEach(() => vi.clearAllMocks())
 
-describe('verifyPrivyJwt', () => {
-  it('returns null when no authorization header', async () => {
-    const req = new Request('http://localhost/api/test')
-    expect(await verifyPrivyJwt(req)).toBeNull()
+function makeReq(token?: string, walletHeader?: string) {
+  const headers: Record<string, string> = {}
+  if (token) headers['authorization'] = `Bearer ${token}`
+  if (walletHeader) headers['x-wallet-address'] = walletHeader
+  return new Request('http://localhost/api/test', { headers })
+}
+
+describe('withAuth', () => {
+  it('returns 401 when no auth provided', async () => {
+    const handler = withAuth(async (_req, { walletAddress }) => Response.json({ walletAddress }) as never)
+    const res = await handler(makeReq(), {})
+    expect(res.status).toBe(401)
   })
 
-  it('returns null when authorization header is not Bearer', async () => {
-    const req = new Request('http://localhost/api/test', {
-      headers: { Authorization: 'Basic abc' },
+  it('extracts base58 wallet address from valid JWT', async () => {
+    mockJwtVerify.mockResolvedValueOnce({
+      payload: { wallets: [{ public_key: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', curve: 'ed25519' }] },
     })
-    expect(await verifyPrivyJwt(req)).toBeNull()
+    const handler = withAuth(async (_req, { walletAddress }) => Response.json({ walletAddress }) as never)
+    const res = await handler(makeReq('valid-token'), {})
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.walletAddress).toBe('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM')
   })
 
-  it('returns null when JWT verification throws', async () => {
-    mockVerifyAuthToken.mockRejectedValueOnce(new Error('invalid'))
-    const req = new Request('http://localhost/api/test', {
-      headers: { Authorization: 'Bearer bad' },
+  it('returns 401 when JWT has no ed25519 wallet', async () => {
+    mockJwtVerify.mockResolvedValueOnce({
+      payload: { wallets: [{ public_key: '0xdeadbeef', curve: 'secp256k1' }] },
     })
-    expect(await verifyPrivyJwt(req)).toBeNull()
+    const handler = withAuth(async (_req, { walletAddress }) => Response.json({ walletAddress }) as never)
+    const res = await handler(makeReq('valid-token'), {})
+    expect(res.status).toBe(401)
   })
 
-  it('returns null when user has no linked Solana wallet', async () => {
-    mockVerifyAuthToken.mockResolvedValueOnce({ userId: 'did:privy:123' })
-    mockGetUser.mockResolvedValueOnce({ linkedAccounts: [] })
-    const req = new Request('http://localhost/api/test', {
-      headers: { Authorization: 'Bearer valid' },
-    })
-    expect(await verifyPrivyJwt(req)).toBeNull()
+  it('returns 401 when JWT has no wallets field', async () => {
+    mockJwtVerify.mockResolvedValueOnce({ payload: {} })
+    const handler = withAuth(async (_req, { walletAddress }) => Response.json({ walletAddress }) as never)
+    const res = await handler(makeReq('valid-token'), {})
+    expect(res.status).toBe(401)
   })
 
-  it('returns wallet address on valid JWT with linked Solana wallet', async () => {
-    mockVerifyAuthToken.mockResolvedValueOnce({ userId: 'did:privy:123' })
-    mockGetUser.mockResolvedValueOnce({
-      linkedAccounts: [
-        { type: 'wallet', chainType: 'solana', address: 'SoLWaLLet1234' },
-      ],
+  it('returns 401 when JWT verification throws', async () => {
+    mockJwtVerify.mockRejectedValueOnce(new Error('invalid signature'))
+    const handler = withAuth(async (_req, { walletAddress }) => Response.json({ walletAddress }) as never)
+    const res = await handler(makeReq('bad-token'), {})
+    expect(res.status).toBe(401)
+  })
+
+  it('falls back to X-Wallet-Address header when no JWT', async () => {
+    const handler = withAuth(async (_req, { walletAddress }) => Response.json({ walletAddress }) as never)
+    const res = await handler(makeReq(undefined, 'fallback-wallet'), {})
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.walletAddress).toBe('fallback-wallet')
+  })
+
+  it('passes resolved params to handler', async () => {
+    mockJwtVerify.mockResolvedValueOnce({
+      payload: { wallets: [{ public_key: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', curve: 'ed25519' }] },
     })
-    const req = new Request('http://localhost/api/test', {
-      headers: { Authorization: 'Bearer valid' },
+    const handler = withAuth(async (_req, { params }) => Response.json({ params }) as never)
+    const res = await handler(makeReq('valid-token'), { params: { id: '42' } })
+    const body = await res.json()
+    expect(body.params).toEqual({ id: '42' })
+  })
+
+  it('resolves async params', async () => {
+    mockJwtVerify.mockResolvedValueOnce({
+      payload: { wallets: [{ public_key: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', curve: 'ed25519' }] },
     })
-    expect(await verifyPrivyJwt(req)).toBe('SoLWaLLet1234')
+    const handler = withAuth(async (_req, { params }) => Response.json({ params }) as never)
+    const res = await handler(makeReq('valid-token'), { params: Promise.resolve({ id: '99' }) })
+    const body = await res.json()
+    expect(body.params).toEqual({ id: '99' })
   })
 })

@@ -1,5 +1,16 @@
 export type AnimalType = 'cow' | 'pig' | 'duck' | 'dog' | 'sheep' | 'frog' | 'chicken' | 'horse'
 
+export const ANIMAL_PRODUCE: Record<AnimalType, { item: string; emoji: string; verb: string }> = {
+  cow:     { item: 'milk',     emoji: '🥛', verb: 'gives' },
+  pig:     { item: 'honey',    emoji: '🍯', verb: 'shares' },
+  duck:    { item: 'feathers', emoji: '🪶', verb: 'drops' },
+  dog:     { item: 'biscuits', emoji: '🦴', verb: 'buries' },
+  sheep:   { item: 'wool',     emoji: '🧶', verb: 'sheds' },
+  frog:    { item: 'dewdrops', emoji: '💧', verb: 'collects' },
+  chicken: { item: 'eggs',     emoji: '🥚', verb: 'lays' },
+  horse:   { item: 'carrots',  emoji: '🥕', verb: 'grows' },
+}
+
 export interface AnimalConfig {
   type: AnimalType
   name: string
