@@ -82,9 +82,18 @@ export function AppWeb3AuthProvider({ children }: { children: ReactNode }) {
 
   const getWcAdapter = useCallback((): WalletConnectWalletAdapter => {
     if (!wcAdapterRef.current) {
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://milk-honey-eight.vercel.app'
       wcAdapterRef.current = new WalletConnectWalletAdapter({
         network: WalletAdapterNetwork.Mainnet,
-        options: { projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID! },
+        options: {
+          projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
+          metadata: {
+            name: 'Milk & Honey',
+            description: 'Gather your crew. Earn real yield.',
+            url: origin,
+            icons: [`${origin}/mascot.png`],
+          },
+        },
       })
     }
     return wcAdapterRef.current
