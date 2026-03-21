@@ -40,7 +40,7 @@ export default function LoginPage() {
     setError(null)
     setLoading('wallet')
     try {
-      const wcAdapter = getWcAdapter()
+      const wcAdapter = await getWcAdapter()
       await wcAdapter.connect()
 
       const addr = wcAdapter.publicKey?.toBase58()

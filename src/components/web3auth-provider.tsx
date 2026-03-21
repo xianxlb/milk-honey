@@ -29,7 +29,7 @@ interface Web3AuthContextValue {
   getAccessToken: () => Promise<string | null>
   walletAddress: string | undefined
   solanaWallet: SolanaWallet | null
-  getWcAdapter: () => WalletConnectWalletAdapter
+  getWcAdapter: () => Promise<WalletConnectWalletAdapter>
 }
 
 const Web3AuthContext = createContext<Web3AuthContextValue | null>(null)
@@ -80,22 +80,33 @@ export function AppWeb3AuthProvider({ children }: { children: ReactNode }) {
   // module init time. The adapter is created only when connect() is actually called.
   const wcAdapterRef = useRef<WalletConnectWalletAdapter | null>(null)
 
-  const getWcAdapter = useCallback((): WalletConnectWalletAdapter => {
-    if (!wcAdapterRef.current) {
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://milk-honey-eight.vercel.app'
-      wcAdapterRef.current = new WalletConnectWalletAdapter({
-        network: WalletAdapterNetwork.Mainnet,
-        options: {
-          projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
-          metadata: {
-            name: 'Milk & Honey',
-            description: 'Gather your crew. Earn real yield.',
-            url: origin,
-            icons: [`${origin}/mascot.png`],
-          },
+  const getWcAdapter = useCallback(async (): Promise<WalletConnectWalletAdapter> => {
+    // Always clear stale WalletConnect IndexedDB data before creating an adapter.
+    // If expired sessions/pairings exist, UniversalProvider.init() hangs silently
+    // trying to restore them via the relay, and the QR modal never opens.
+    await new Promise<void>(resolve => {
+      const req = indexedDB.deleteDatabase('WALLET_CONNECT_V2_INDEXED_DB')
+      req.onsuccess = () => resolve()
+      req.onerror = () => resolve()
+      req.onblocked = () => resolve()
+    })
+    // Always create a fresh adapter — reusing a stale one keeps the old
+    // (potentially hung) UniversalProvider and WalletConnectWallet inside it.
+    wcAdapterRef.current = null
+
+    const origin = window.location.origin
+    wcAdapterRef.current = new WalletConnectWalletAdapter({
+      network: WalletAdapterNetwork.Mainnet,
+      options: {
+        projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
+        metadata: {
+          name: 'Milk & Honey',
+          description: 'Gather your crew. Earn real yield.',
+          url: origin,
+          icons: [`${origin}/mascot.png`],
         },
-      })
-    }
+      },
+    })
     return wcAdapterRef.current
   }, [])
 
