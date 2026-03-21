@@ -1,14 +1,12 @@
 'use client'
 
 import { useWeb3Auth } from '@/components/web3auth-provider'
-import { useWallet } from '@solana/wallet-adapter-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import bs58 from 'bs58'
 
 export default function LoginPage() {
-  const { ready, authenticated, loginWithGoogle, loginWithEmail, setWalletSession } = useWeb3Auth()
-  const { select, connect, wallets } = useWallet()
+  const { ready, authenticated, loginWithGoogle, loginWithEmail, setWalletSession, wcAdapter } = useWeb3Auth()
   const router = useRouter()
 
   const [email, setEmail] = useState('')
@@ -42,13 +40,9 @@ export default function LoginPage() {
     setError(null)
     setLoading('wallet')
     try {
-      const wc = wallets.find(w => w.adapter.name === 'WalletConnect')
-      if (!wc) throw new Error('WalletConnect not available')
-      select(wc.adapter.name)
-      await connect()
+      await wcAdapter.connect()
 
-      // Inline SIWS — get address directly from adapter after connect resolves
-      const addr = wc.adapter.publicKey?.toBase58()
+      const addr = wcAdapter.publicKey?.toBase58()
       if (!addr) throw new Error('No wallet address after connect')
 
       const challengeRes = await fetch(`/api/auth/challenge?wallet=${addr}`)
@@ -56,10 +50,7 @@ export default function LoginPage() {
       const { message } = await challengeRes.json()
 
       const msgBytes = new TextEncoder().encode(message)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const signMsg = (wc.adapter as any).signMessage
-      if (!signMsg) throw new Error('Wallet does not support message signing')
-      const sigBytes = await signMsg(msgBytes)
+      const sigBytes = await wcAdapter.signMessage(msgBytes)
       const signature = bs58.encode(sigBytes)
 
       const verifyRes = await fetch('/api/auth/verify', {
