@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import bs58 from 'bs58'
 
 export default function LoginPage() {
-  const { ready, authenticated, loginWithGoogle, loginWithEmail, setWalletSession, wcAdapter } = useWeb3Auth()
+  const { ready, authenticated, loginWithGoogle, loginWithEmail, setWalletSession, getWcAdapter } = useWeb3Auth()
   const router = useRouter()
 
   const [email, setEmail] = useState('')
@@ -40,6 +40,7 @@ export default function LoginPage() {
     setError(null)
     setLoading('wallet')
     try {
+      const wcAdapter = getWcAdapter()
       await wcAdapter.connect()
 
       const addr = wcAdapter.publicKey?.toBase58()

@@ -5,7 +5,7 @@ import { Web3AuthNoModal } from '@web3auth/no-modal'
 import { AuthAdapter, UX_MODE, LOGIN_PROVIDER } from '@web3auth/auth-adapter'
 import { WALLET_ADAPTERS, CHAIN_NAMESPACES, WEB3AUTH_NETWORK } from '@web3auth/base'
 import { SolanaPrivateKeyProvider, SolanaWallet } from '@web3auth/solana-provider'
-import { WalletConnectWalletAdapter } from '@solana/wallet-adapter-walletconnect'
+import { WalletConnectWalletAdapter } from '@walletconnect/solana-adapter'
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { setApiWalletAddress } from '@/lib/client-api'
 
@@ -29,7 +29,7 @@ interface Web3AuthContextValue {
   getAccessToken: () => Promise<string | null>
   walletAddress: string | undefined
   solanaWallet: SolanaWallet | null
-  wcAdapter: WalletConnectWalletAdapter
+  getWcAdapter: () => WalletConnectWalletAdapter
 }
 
 const Web3AuthContext = createContext<Web3AuthContextValue | null>(null)
@@ -76,15 +76,19 @@ export function AppWeb3AuthProvider({ children }: { children: ReactNode }) {
   const [solanaWallet, setSolanaWallet] = useState<SolanaWallet | null>(null)
   const [sessionToken, setSessionToken] = useState<string | null>(null)
 
-  // Create adapter once and hold a stable ref — bypasses wallet-adapter-react
-  // provider wrapping which auto-injects SolanaMobileWalletAdapter on mobile
-  // and breaks the EventEmitter prototype chain on the WalletConnect adapter.
-  const wcAdapterRef = useRef<WalletConnectWalletAdapter>(
-    new WalletConnectWalletAdapter({
-      network: WalletAdapterNetwork.Mainnet,
-      options: { projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID! },
-    })
-  )
+  // Lazy-init the adapter on first use to avoid ESM/CJS prototype issues at
+  // module init time. The adapter is created only when connect() is actually called.
+  const wcAdapterRef = useRef<WalletConnectWalletAdapter | null>(null)
+
+  const getWcAdapter = useCallback((): WalletConnectWalletAdapter => {
+    if (!wcAdapterRef.current) {
+      wcAdapterRef.current = new WalletConnectWalletAdapter({
+        network: WalletAdapterNetwork.Mainnet,
+        options: { projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID! },
+      })
+    }
+    return wcAdapterRef.current
+  }, [])
 
   useEffect(() => {
     getWeb3Auth()
@@ -141,7 +145,7 @@ export function AppWeb3AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     if (_w3a?.connected) await _w3a.logout()
-    if (wcAdapterRef.current.connected) await wcAdapterRef.current.disconnect()
+    if (wcAdapterRef.current?.connected) await wcAdapterRef.current.disconnect()
     setAuthenticated(false)
     setWalletAddress(undefined)
     setSolanaWallet(null)
@@ -172,7 +176,7 @@ export function AppWeb3AuthProvider({ children }: { children: ReactNode }) {
         getAccessToken,
         walletAddress,
         solanaWallet,
-        wcAdapter: wcAdapterRef.current,
+        getWcAdapter,
       }}
     >
       {children}
