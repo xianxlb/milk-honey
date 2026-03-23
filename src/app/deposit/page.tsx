@@ -53,7 +53,7 @@ export default function DepositPage() {
         if (msg === 'Not authenticated') {
           setErrorMsg('Please sign in and try again.')
         } else {
-          setErrorMsg('Something went wrong. Please try again.')
+          setErrorMsg(msg || 'Something went wrong. Please try again.')
         }
         setStatus('error')
       }

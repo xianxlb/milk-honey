@@ -30,6 +30,7 @@ interface Web3AuthContextValue {
   walletAddress: string | undefined
   solanaWallet: SolanaWallet | null
   getWcAdapter: () => Promise<WalletConnectWalletAdapter>
+  getConnectedWcAdapter: () => WalletConnectWalletAdapter | null
 }
 
 const Web3AuthContext = createContext<Web3AuthContextValue | null>(null)
@@ -121,6 +122,11 @@ export function AppWeb3AuthProvider({ children }: { children: ReactNode }) {
     return wcAdapterRef.current
   }, [])
 
+  const getConnectedWcAdapter = useCallback((): WalletConnectWalletAdapter | null => {
+    const adapter = wcAdapterRef.current
+    return adapter?.connected ? adapter : null
+  }, [])
+
   useEffect(() => {
     getWeb3Auth()
       .then(async w3a => {
@@ -208,6 +214,7 @@ export function AppWeb3AuthProvider({ children }: { children: ReactNode }) {
         walletAddress,
         solanaWallet,
         getWcAdapter,
+        getConnectedWcAdapter,
       }}
     >
       {children}
