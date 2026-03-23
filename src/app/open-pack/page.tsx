@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { Sparkles } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { usePortfolio } from '@/contexts/portfolio-context'
 import { openPack } from '@/lib/client-api'
 import { getAnimalEmoji, getAnimalImage } from '@/lib/animal-images'
 import { getAnimalName, type AnimalType } from '@/lib/animals'
@@ -17,6 +18,7 @@ function OpenPackContent() {
   const searchParams = useSearchParams()
   const packId = searchParams.get('packId')
   const { ready, getAccessToken } = useAuth()
+  const { refresh } = usePortfolio()
 
   const [stage, setStage] = useState<'cutting' | 'opening' | 'revealed'>('cutting')
   const [cutProgress, setCutProgress] = useState(0)
@@ -85,7 +87,7 @@ function OpenPackContent() {
     }
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const packs = getRemainingPacks()
     const idx = packs.indexOf(packId || '')
     if (idx >= 0 && idx < packs.length - 1) {
@@ -94,6 +96,7 @@ function OpenPackContent() {
       router.replace(`/open-pack?packId=${nextPackId}`)
     } else {
       sessionStorage.removeItem('pending_packs')
+      await refresh()
       router.replace('/')
     }
   }

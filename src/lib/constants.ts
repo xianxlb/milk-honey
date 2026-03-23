@@ -3,12 +3,12 @@ export const MIN_DEPOSIT = 1
 export const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 
 export const ANIMAL_TYPE_CONFIGS = [
-  { type: 'cow',     name: 'Bessie',       emoji: '🐄' },
+  { type: 'cow',     name: 'Maple',        emoji: '🐄' },
   { type: 'pig',     name: 'Sir Reginald', emoji: '🐷' },
   { type: 'duck',    name: 'Gerald',       emoji: '🦆' },
-  { type: 'dog',     name: 'Biscuit',      emoji: '🐶' },
+  { type: 'raccoon', name: 'Remy',         emoji: '🦝' },
   { type: 'sheep',   name: 'Wooly',        emoji: '🐑' },
   { type: 'frog',    name: 'Ribbit',       emoji: '🐸' },
   { type: 'chicken', name: 'Nugget',       emoji: '🐔' },
-  { type: 'horse',   name: 'Clover',       emoji: '🐴' },
+  { type: 'bear',    name: 'Bruno',        emoji: '🐻' },
 ] as const

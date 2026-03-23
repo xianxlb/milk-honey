@@ -1,7 +1,9 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
-import { useWeb3Auth } from '@/components/web3auth-provider'
+import { usePrivy } from '@privy-io/react-auth'
+import { useWallets } from '@privy-io/react-auth/solana'
+import { setApiWalletAddress } from '@/lib/client-api'
 
 type Card = { id: string; animal_type: string; level: number }
 type Pack = { id: string; wallet_address: string; deposit_id: string; card_id: string | null; created_at: string; opened_at: string | null }
@@ -32,7 +34,13 @@ type PortfolioContextValue = {
 const PortfolioContext = createContext<PortfolioContextValue | null>(null)
 
 export function PortfolioProvider({ children }: { children: React.ReactNode }) {
-  const { ready, authenticated, getAccessToken } = useWeb3Auth()
+  const { ready, authenticated, getAccessToken } = usePrivy()
+  const { wallets } = useWallets()
+  const walletAddress = wallets[0]?.address
+
+  useEffect(() => {
+    setApiWalletAddress(walletAddress)
+  }, [walletAddress])
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null)
   const [pendingWithdrawal, setPendingWithdrawal] = useState<PendingWithdrawal | null>(null)
   const [loading, setLoading] = useState(true)
@@ -55,6 +63,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   }, [getAccessToken])
 
   const refresh = useCallback(async () => {
+    if (!walletAddress) return
     const token = await getToken()
     if (!token) return
     // Retry once (2 s delay) before surfacing an error — handles transient
@@ -63,7 +72,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       if (attempt > 0) await new Promise(r => setTimeout(r, 2000))
       try {
         const res = await fetch('/api/dashboard', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'X-Wallet-Address': walletAddress,
+          },
         })
         if (!res.ok) throw new Error(`${res.status}`)
         const data = await res.json()
@@ -78,12 +90,12 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       }
     }
     setLoading(false)
-  }, [getToken])
+  }, [getToken, walletAddress])
 
   useEffect(() => {
-    if (!authenticated) return
+    if (!authenticated || !walletAddress) return
     refresh()
-  }, [authenticated, refresh])
+  }, [authenticated, walletAddress, refresh])
 
   // Refresh on window focus
   useEffect(() => {

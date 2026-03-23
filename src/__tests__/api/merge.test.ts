@@ -64,7 +64,7 @@ describe('POST /api/cards/merge', () => {
         where: vi.fn().mockImplementation(() => {
           selectCallCount++
           if (selectCallCount === 1) return Promise.resolve([makeCard('card-1', 1, 'cow')])
-          return Promise.resolve([makeCard('card-2', 1, 'dog')])
+          return Promise.resolve([makeCard('card-2', 1, 'raccoon')])
         }),
       }),
     }))

@@ -2,8 +2,7 @@ import type { Metadata, Viewport } from 'next'
 
 export const dynamic = 'force-dynamic'
 import './globals.css'
-import { AppWeb3AuthProvider } from '@/components/web3auth-provider'
-import { PortfolioProvider } from '@/contexts/portfolio-context'
+import { Providers } from '@/components/providers'
 
 export const metadata: Metadata = {
   title: 'Milk & Honey',
@@ -22,7 +21,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="antialiased max-w-md mx-auto"><AppWeb3AuthProvider><PortfolioProvider>{children}</PortfolioProvider></AppWeb3AuthProvider></body>
+      <body className="antialiased max-w-md mx-auto">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }

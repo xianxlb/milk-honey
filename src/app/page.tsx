@@ -157,7 +157,7 @@ export default function HomePage() {
   const displayDecimals = ratePerSec > 0
     ? Math.min(10, Math.max(6, Math.round(-Math.log10(ratePerSec))))
     : 6
-  const nextMilestone = Math.ceil(Math.max(positionDollars, 0.01) / 20) * 20
+  const nextMilestone = (Math.floor(positionDollars / 20) + 1) * 20
   const progress = ((positionDollars % 20) / 20) * 100
   const amountUntilReward = Math.max(0, nextMilestone - positionDollars)
   const gridClass = cards.length <= 6 ? 'grid-cols-2' : 'grid-cols-3'

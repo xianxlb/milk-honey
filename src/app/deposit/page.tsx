@@ -9,6 +9,7 @@ import { getDepositTx } from '@/lib/client-api'
 import { MIN_DEPOSIT } from '@/lib/constants'
 import { useTransactionSender } from '@/hooks/use-transaction-sender'
 
+
 export default function DepositPage() {
   const router = useRouter()
   const { ready, getAccessToken } = useAuth()
