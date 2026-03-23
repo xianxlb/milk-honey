@@ -82,7 +82,7 @@ describe('POST /api/deposit/verify', () => {
     expect((await POST(req, { walletAddress: 'wallet123' })).status).toBe(409)
   })
 
-  it('credits 3 packs for 300 USDC deposit', async () => {
+  it('credits 15 packs for 300 USDC deposit', async () => {
     mockVerifyTx.mockResolvedValueOnce(true)
     const req = new Request('http://localhost/api/deposit/verify', {
       method: 'POST', body: JSON.stringify({ txSignature: 'sig1', amountUsdc: 300_000_000 }),
@@ -90,6 +90,6 @@ describe('POST /api/deposit/verify', () => {
     })
     const res = await POST(req, { walletAddress: 'wallet123' })
     expect(res.status).toBe(200)
-    expect((await res.json()).packs).toHaveLength(3)
+    expect((await res.json()).packs).toHaveLength(15)
   })
 })

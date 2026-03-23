@@ -6,9 +6,11 @@ import { motion, AnimatePresence } from 'motion/react'
 import { Sparkles } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { openPack } from '@/lib/client-api'
-import { getBuildingEmoji, getBuildingImage, getBuildingName } from '@/lib/building-images'
+import { getAnimalEmoji, getAnimalImage } from '@/lib/animal-images'
+import { getAnimalName, type AnimalType } from '@/lib/animals'
+import { IntroDialogue } from '@/components/IntroDialogue'
 
-type Card = { id: string; building_type: string; level: number }
+type Card = { id: string; animal_type: string; level: number }
 
 function OpenPackContent() {
   const router = useRouter()
@@ -21,6 +23,7 @@ function OpenPackContent() {
   const [isDragging, setIsDragging] = useState(false)
   const [revealedCard, setRevealedCard] = useState<Card | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showIntro, setShowIntro] = useState(false)
   const cutAreaRef = useRef<HTMLDivElement>(null)
 
   const getRemainingPacks = (): string[] => {
@@ -67,7 +70,14 @@ function OpenPackContent() {
       const token = await getAccessToken()
       const result = await openPack(token!, packId)
       setRevealedCard(result.card)
-      setTimeout(() => setStage('revealed'), 1000)
+      setTimeout(() => {
+        setStage('revealed')
+        // Check if user has seen this animal before
+        const seenKey = `intro_seen_${result.card.animal_type}`
+        if (!localStorage.getItem(seenKey)) {
+          setShowIntro(true)
+        }
+      }, 1000)
     } catch (err) {
       console.error('Failed to open pack:', err)
       setError('Failed to open pack')
@@ -111,8 +121,8 @@ function OpenPackContent() {
                   <div className="w-24 h-24 bg-[#F0C430] rounded-full flex items-center justify-center mb-4 border-4 border-[#1A1A1A]/10">
                     <span className="text-5xl">🎁</span>
                   </div>
-                  <h2 className="text-3xl font-bold text-white text-center" style={{ fontFamily: 'Fredoka' }}>Building Pack</h2>
-                  <p className="text-white/60 text-sm mt-2 font-medium">Contains 1 random building</p>
+                  <h2 className="text-3xl font-bold text-white text-center" style={{ fontFamily: 'Fredoka' }}>Crew Pack</h2>
+                  <p className="text-white/60 text-sm mt-2 font-medium">Contains 1 new crew member</p>
                 </div>
                 <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" animate={{ x: ['-100%', '200%'] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }} />
                 <div ref={cutAreaRef} className="absolute top-0 left-0 right-0 h-24 cursor-grab active:cursor-grabbing z-20"
@@ -157,24 +167,24 @@ function OpenPackContent() {
                 <div className="bg-[#FBF8F2] rounded-3xl shadow-2xl p-6 border-4 border-[#F0C430]">
                   <div className="flex justify-center mb-4">
                     <div className="bg-[#F0C430] px-6 py-2 rounded-full border-2 border-[#1A1A1A]/10">
-                      <p className="text-[#1A1A1A] font-bold text-sm">NEW BUILDING!</p>
+                      <p className="text-[#1A1A1A] font-bold text-sm">NEW CREW MEMBER!</p>
                     </div>
                   </div>
                   <div className="relative mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC] p-4">
                     <div className="w-full h-64 flex items-center justify-center">
-                      {getBuildingImage(revealedCard.building_type) ? (
-                        <img src={getBuildingImage(revealedCard.building_type)!} alt={getBuildingName(revealedCard.building_type)} className="w-full h-full object-contain" />
+                      {getAnimalImage(revealedCard.animal_type, revealedCard.level) ? (
+                        <img src={getAnimalImage(revealedCard.animal_type, revealedCard.level)!} alt={getAnimalName(revealedCard.animal_type as AnimalType)} className="w-full h-full object-contain" />
                       ) : (
-                        <span className="text-[120px]">{getBuildingEmoji(revealedCard.building_type)}</span>
+                        <span className="text-[120px]">{getAnimalEmoji(revealedCard.animal_type)}</span>
                       )}
                     </div>
                     <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent" animate={{ x: ['-100%', '200%'] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }} />
                   </div>
                   <div className="text-center">
-                    <h3 className="text-3xl font-bold text-[#1A1A1A] mb-2" style={{ fontFamily: 'Fredoka' }}>{getBuildingName(revealedCard.building_type)}</h3>
+                    <h3 className="text-3xl font-bold text-[#1A1A1A] mb-2" style={{ fontFamily: 'Fredoka' }}>{getAnimalName(revealedCard.animal_type as AnimalType)}</h3>
                     <div className="flex items-center justify-center gap-2 text-[#1A1A1A]/50">
                       <Sparkles className="w-4 h-4 text-[#F0C430]" />
-                      <p className="text-sm font-semibold">Level {revealedCard.level} Building</p>
+                      <p className="text-sm font-semibold">Level {revealedCard.level}</p>
                       <Sparkles className="w-4 h-4 text-[#F0C430]" />
                     </div>
                   </div>
@@ -185,11 +195,22 @@ function OpenPackContent() {
             <motion.button initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 1 }}
               onClick={handleNext}
               className="w-full mt-6 py-4 bg-[#F0C430] text-[#1A1A1A] rounded-2xl font-bold shadow-lg border-2 border-[#1A1A1A]/10 hover:shadow-xl active:scale-95 transition-all">
-              {remaining > 0 ? `Next Pack (${remaining} remaining)` : 'Add to Village'}
+              {remaining > 0 ? `Next Pack (${remaining} remaining)` : 'Meet the Crew'}
             </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showIntro && revealedCard && (
+        <IntroDialogue
+          animalType={revealedCard.animal_type as AnimalType}
+          level={revealedCard.level}
+          onDismiss={() => {
+            localStorage.setItem(`intro_seen_${revealedCard.animal_type}`, '1')
+            setShowIntro(false)
+          }}
+        />
+      )}
     </div>
   )
 }

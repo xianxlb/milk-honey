@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/auth', () => ({ withAuth: (h: Function) => h }))
-vi.mock('@/lib/lulo', () => ({ readPosition: vi.fn().mockResolvedValue(105_000_000) }))
+vi.mock('@/lib/lulo', () => ({
+  readPosition: vi.fn().mockResolvedValue(105_000_000),
+  readApy: vi.fn().mockResolvedValue(5.5),
+}))
 
 const mockDb = {
   select: vi.fn(),
@@ -10,14 +13,28 @@ vi.mock('@/lib/db', () => ({ db: mockDb, users: {}, cards: {}, packs: {}, deposi
 
 const { GET } = await import('@/app/api/portfolio/route')
 
+// Build a mock query chain that supports both:
+//   .where() → Promise (plain queries)
+//   .where().orderBy().limit() → Promise (latest deposit query)
+function makeChain(result: unknown[] = []) {
+  const whereResult = {
+    orderBy: vi.fn().mockReturnValue({
+      limit: vi.fn().mockResolvedValue(result),
+    }),
+    then: (resolve: (v: unknown[]) => unknown, reject?: (e: unknown) => unknown) =>
+      Promise.resolve(result).then(resolve, reject),
+    catch: (reject: (e: unknown) => unknown) => Promise.resolve(result).catch(reject),
+  }
+  return {
+    from: vi.fn().mockReturnValue({
+      where: vi.fn().mockReturnValue(whereResult),
+    }),
+  }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
-  // Default: empty tables
-  mockDb.select.mockReturnValue({
-    from: vi.fn().mockReturnValue({
-      where: vi.fn().mockResolvedValue([]),
-    }),
-  })
+  mockDb.select.mockImplementation(() => makeChain([]))
 })
 
 describe('GET /api/portfolio', () => {
@@ -29,18 +46,16 @@ describe('GET /api/portfolio', () => {
     expect(body).toHaveProperty('cards')
     expect(body).toHaveProperty('packs')
     expect(body).toHaveProperty('stats')
-    expect(body.stats.apyPercent).toBe(5)
+    expect(body.stats.apyPercent).toBe(5.5)
   })
 
   it('calculates yield as position minus total deposited', async () => {
-    // Mock: cards (empty), packs (empty), deposits sum (100 USDC)
-    mockDb.select.mockReturnValueOnce({
-      from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }), // cards
-    }).mockReturnValueOnce({
-      from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }), // packs
-    }).mockReturnValueOnce({
-      from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([{ total: '100000000' }]) }), // deposits sum
-    })
+    // Mock: cards (empty), packs (empty), deposits sum (100 USDC), latestDeposit (empty)
+    mockDb.select
+      .mockImplementationOnce(() => makeChain([]))                          // cards
+      .mockImplementationOnce(() => makeChain([]))                          // packs
+      .mockImplementationOnce(() => makeChain([{ total: '100000000' }]))    // deposits sum
+      // latestDeposit falls through to beforeEach default (empty)
 
     const req = new Request('http://localhost/api/portfolio')
     const res = await GET(req, { walletAddress: 'wallet123' })

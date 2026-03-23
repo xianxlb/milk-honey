@@ -4,21 +4,25 @@ import { PrivyProvider } from '@privy-io/react-auth'
 import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana'
 import { createSolanaRpc, createSolanaRpcSubscriptions } from '@solana/kit'
 
-const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL
-if (!rpcUrl) throw new Error('NEXT_PUBLIC_SOLANA_RPC_URL is not set')
-
-const wsUrl = rpcUrl.replace(/^https/, 'wss').replace(/^http/, 'ws')
-
 const solanaConnectors = toSolanaWalletConnectors()
-const solanaRpc = createSolanaRpc(rpcUrl)
-const solanaRpcSubscriptions = createSolanaRpcSubscriptions(wsUrl)
+
+// Lazy browser-only init — keeps Helius API key off the client
+let solanaRpc: ReturnType<typeof createSolanaRpc> | undefined
+let solanaRpcSubscriptions: ReturnType<typeof createSolanaRpcSubscriptions> | undefined
+
+if (typeof window !== 'undefined') {
+  const rpcUrl = `${window.location.origin}/api/rpc`
+  const wsUrl = process.env.NEXT_PUBLIC_SOLANA_WS_URL || 'wss://api.mainnet-beta.solana.com'
+  solanaRpc = createSolanaRpc(rpcUrl)
+  solanaRpcSubscriptions = createSolanaRpcSubscriptions(wsUrl)
+}
 
 export function AppPrivyProvider({ children }: { children: React.ReactNode }) {
   return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
       config={{
-        loginMethods: ['apple', 'google', 'wallet'],
+        loginMethods: ['apple', 'google', 'email', 'wallet'],
         appearance: {
           theme: 'light',
           accentColor: '#6CB4E8',
@@ -32,14 +36,15 @@ export function AppPrivyProvider({ children }: { children: React.ReactNode }) {
         externalWallets: {
           solana: { connectors: solanaConnectors },
         },
-        solana: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        solana: solanaRpc ? {
           rpcs: {
             'solana:mainnet': {
-              rpc: solanaRpc,
-              rpcSubscriptions: solanaRpcSubscriptions,
+              rpc: solanaRpc as any,
+              rpcSubscriptions: solanaRpcSubscriptions as any,
             },
           },
-        },
+        } : undefined,
       }}
     >
       {children}

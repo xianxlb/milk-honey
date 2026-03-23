@@ -23,9 +23,9 @@ describe('schema columns', () => {
     expect(cols).toContain('card_id')
   })
 
-  it('cards has building_type and level defaulting to 1', () => {
+  it('cards has animal_type and level defaulting to 1', () => {
     const cols = getTableColumns(cards)
-    expect(cols).toHaveProperty('building_type')
+    expect(cols).toHaveProperty('animal_type')
     expect(cols).toHaveProperty('level')
     // Verify default value is 1 (not 0)
     expect((cols.level as { default?: unknown }).default).toBe(1)

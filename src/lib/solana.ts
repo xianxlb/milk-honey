@@ -1,6 +1,6 @@
 import { Connection } from '@solana/web3.js'
 
-const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
+const RPC_URL = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
 
 let _connection: Connection | null = null
 
@@ -13,7 +13,7 @@ export function getConnection(): Connection {
 // Uses getSignatureStatuses (faster to propagate than getTransaction) with retries.
 export async function verifyTx(signature: string): Promise<boolean> {
   const connection = getConnection()
-  const MAX_ATTEMPTS = 6
+  const MAX_ATTEMPTS = 12
   const DELAY_MS = 2000
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {

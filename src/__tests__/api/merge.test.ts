@@ -2,16 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/auth', () => ({ withAuth: (h: Function) => h }))
 
-const makeCard = (id: string, level = 1, type = 'bakery') => ({
-  id, wallet_address: 'wallet123', building_type: type, level, created_at: new Date(),
+const makeCard = (id: string, level = 1, type = 'cow') => ({
+  id, wallet_address: 'wallet123', animal_type: type, level, created_at: new Date(),
 })
 
 let selectCallCount = 0
-const mockDb = {
+const mockDb: Record<string, ReturnType<typeof vi.fn>> = {
   select: vi.fn(),
   insert: vi.fn(),
   delete: vi.fn(),
   update: vi.fn(),
+  transaction: vi.fn(),
 }
 
 vi.mock('@/lib/db', () => ({ db: mockDb, cards: {}, packs: {} }))
@@ -33,6 +34,7 @@ beforeEach(() => {
   mockDb.insert.mockReturnValue({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([makeCard('card-3', 2)]) }) })
   mockDb.delete.mockReturnValue({ where: vi.fn().mockResolvedValue([]) })
   mockDb.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }) })
+  mockDb.transaction.mockImplementation((cb: (tx: typeof mockDb) => Promise<unknown>) => cb(mockDb))
 })
 
 describe('POST /api/cards/merge', () => {
@@ -61,8 +63,8 @@ describe('POST /api/cards/merge', () => {
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockImplementation(() => {
           selectCallCount++
-          if (selectCallCount === 1) return Promise.resolve([makeCard('card-1', 1, 'bakery')])
-          return Promise.resolve([makeCard('card-2', 1, 'bookshop')])
+          if (selectCallCount === 1) return Promise.resolve([makeCard('card-1', 1, 'cow')])
+          return Promise.resolve([makeCard('card-2', 1, 'dog')])
         }),
       }),
     }))

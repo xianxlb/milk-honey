@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('@/lib/auth', () => ({ withAuth: (h: Function) => h }))
 
 const mockPack = { id: 'pack-1', wallet_address: 'wallet123', deposit_id: 'dep-1', card_id: null, opened_at: null, created_at: new Date() }
-const mockCard = { id: 'card-1', wallet_address: 'wallet123', building_type: 'bakery', level: 1, created_at: new Date() }
+const mockCard = { id: 'card-1', wallet_address: 'wallet123', animal_type: 'cow', level: 1, created_at: new Date() }
 
 const mockDb = { select: vi.fn(), insert: vi.fn(), update: vi.fn() }
 vi.mock('@/lib/db', () => ({ db: mockDb, packs: {}, cards: {} }))
@@ -18,7 +18,7 @@ beforeEach(() => {
 })
 
 describe('POST /api/packs/[id]/open', () => {
-  it('reveals a building card at level 1 and marks pack as opened', async () => {
+  it('reveals an animal card at level 1 and marks pack as opened', async () => {
     const req = new Request('http://localhost/api/packs/pack-1/open', { method: 'POST' })
     const res = await POST(req, { walletAddress: 'wallet123', params: { id: 'pack-1' } })
     expect(res.status).toBe(200)
