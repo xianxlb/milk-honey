@@ -57,20 +57,27 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     const token = await getToken()
     if (!token) return
-    try {
-      const res = await fetch('/api/dashboard', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error('Failed to load')
-      const data = await res.json()
-      setPortfolio(data.portfolio)
-      setPendingWithdrawal(data.pendingWithdrawal)
-      setError(null)
-    } catch {
-      setError('Your crew is taking a nap. Tap to wake them up!')
-    } finally {
-      setLoading(false)
+    // Retry once (2 s delay) before surfacing an error — handles transient
+    // network hiccups that would otherwise block the whole home screen.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 2000))
+      try {
+        const res = await fetch('/api/dashboard', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) throw new Error(`${res.status}`)
+        const data = await res.json()
+        setPortfolio(data.portfolio)
+        setPendingWithdrawal(data.pendingWithdrawal)
+        setError(null)
+        setLoading(false)
+        return
+      } catch (err) {
+        if (attempt === 0) continue
+        setError((err as Error).message ?? 'Failed to load')
+      }
     }
+    setLoading(false)
   }, [getToken])
 
   useEffect(() => {

@@ -119,7 +119,8 @@ export default function HomePage() {
     return () => cancelAnimationFrame(rafRef.current)
   }, [])
 
-  if (!ready || (authenticated && loading && !portfolio)) {
+  // loading from context = !ready || portfolioFetching — covers all loading phases
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#F5F0E8] flex items-center justify-center">
         <div className="text-center">
@@ -130,12 +131,17 @@ export default function HomePage() {
     )
   }
 
-  if (error || !portfolio) {
+  // Not loading + not authenticated = redirect is firing via useAuth
+  if (!authenticated) return null
+
+  if (!portfolio) {
     return (
       <div className="min-h-screen bg-[#F5F0E8] flex items-center justify-center p-6">
         <div className="text-center">
-          <p className="text-[#DC2626] font-semibold mb-4">{error ?? 'Something went sideways'}</p>
-          <button onClick={refresh} className="px-6 py-3 bg-[#6CB4E8] text-white rounded-xl font-semibold">Try Again</button>
+          <p className="text-[#1A1A1A]/50 font-medium mb-4">
+            {error ? `Couldn't reach your crew (${error})` : 'Something went sideways'}
+          </p>
+          <button onClick={refresh} className="px-6 py-3 bg-[#F0C430] text-[#1A1A1A] rounded-xl font-semibold">Try Again</button>
         </div>
       </div>
     )
