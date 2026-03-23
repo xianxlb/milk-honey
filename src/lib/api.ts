@@ -91,6 +91,29 @@ export async function ensureCity(): Promise<string> {
   return city.id
 }
 
+export interface RelayResult {
+  signature: string
+  cityId: string
+  deposit: { id: string; amount: number; createdAt: number } | null
+  packs: { id: string; cardId: string | null; createdAt: number }[]
+}
+
+export async function relayTransaction(
+  txBase64: string,
+  walletAddress: string,
+  amountDollars: number,
+  accessToken: string
+): Promise<RelayResult> {
+  return apiFetch('/api/relay', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ transaction: txBase64, walletAddress, amountDollars }),
+  })
+}
+
 export async function getPortfolio(cityId: string): Promise<Portfolio> {
   return apiFetch(`/api/cities/${cityId}/portfolio`)
 }

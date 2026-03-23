@@ -27,6 +27,8 @@ function initSchema(db: Database.Database) {
     CREATE TABLE IF NOT EXISTS cities (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      privy_user_id TEXT,
+      wallet_address TEXT,
       referred_by TEXT,
       created_at INTEGER NOT NULL,
       FOREIGN KEY (referred_by) REFERENCES cities(id)
@@ -71,12 +73,14 @@ function now(): number {
 export interface City {
   id: string
   name: string
+  privyUserId: string | null
+  walletAddress: string | null
   referredBy: string | null
   createdAt: number
 }
 
 export function createCity(db: Database.Database, name: string, referredBy?: string): City {
-  const city: City = { id: uuid(), name, referredBy: referredBy ?? null, createdAt: now() }
+  const city: City = { id: uuid(), name, privyUserId: null, walletAddress: null, referredBy: referredBy ?? null, createdAt: now() }
   db.prepare('INSERT INTO cities (id, name, referred_by, created_at) VALUES (?, ?, ?, ?)')
     .run(city.id, city.name, city.referredBy, city.createdAt)
   return city
@@ -84,9 +88,21 @@ export function createCity(db: Database.Database, name: string, referredBy?: str
 
 export function getCityById(db: Database.Database, id: string): City | null {
   const row = db.prepare(
-    'SELECT id, name, referred_by as referredBy, created_at as createdAt FROM cities WHERE id = ?'
+    'SELECT id, name, privy_user_id as privyUserId, wallet_address as walletAddress, referred_by as referredBy, created_at as createdAt FROM cities WHERE id = ?'
   ).get(id) as City | undefined
   return row ?? null
+}
+
+export function getCityByPrivyUserId(db: Database.Database, privyUserId: string): City | null {
+  const row = db.prepare(
+    'SELECT id, name, privy_user_id as privyUserId, wallet_address as walletAddress, referred_by as referredBy, created_at as createdAt FROM cities WHERE privy_user_id = ?'
+  ).get(privyUserId) as City | undefined
+  return row ?? null
+}
+
+export function linkCityToPrivyUser(db: Database.Database, cityId: string, privyUserId: string, walletAddress: string): void {
+  db.prepare('UPDATE cities SET privy_user_id = ?, wallet_address = ? WHERE id = ?')
+    .run(privyUserId, walletAddress, cityId)
 }
 
 // --- Deposits ---
