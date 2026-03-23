@@ -41,7 +41,15 @@ export default function LoginPage() {
     setLoading('wallet')
     try {
       const wcAdapter = await getWcAdapter()
-      await wcAdapter.connect()
+      // Race connect() against a 2-minute timeout. Without this, if
+      // UniversalProvider.init() hangs (stale relay sessions), connect()
+      // waits forever with no error — the spinner never clears.
+      await Promise.race([
+        wcAdapter.connect(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Connection timed out — please try again')), 120_000)
+        ),
+      ])
 
       const addr = wcAdapter.publicKey?.toBase58()
       if (!addr) throw new Error('No wallet address after connect')

@@ -81,14 +81,25 @@ export function AppWeb3AuthProvider({ children }: { children: ReactNode }) {
   const wcAdapterRef = useRef<WalletConnectWalletAdapter | null>(null)
 
   const getWcAdapter = useCallback(async (): Promise<WalletConnectWalletAdapter> => {
-    // Always clear stale WalletConnect IndexedDB data before creating an adapter.
-    // If expired sessions/pairings exist, UniversalProvider.init() hangs silently
-    // trying to restore them via the relay, and the QR modal never opens.
+    // Clear all WalletConnect IndexedDB stores before creating a fresh adapter.
+    // Stale sessions cause UniversalProvider.init() to hang trying to restore
+    // them via the relay. We clear stores (not delete the whole DB) so it works
+    // even when another tab holds a connection open (deleteDatabase fires
+    // onblocked in that case and the stale data survives).
     await new Promise<void>(resolve => {
-      const req = indexedDB.deleteDatabase('WALLET_CONNECT_V2_INDEXED_DB')
-      req.onsuccess = () => resolve()
-      req.onerror = () => resolve()
-      req.onblocked = () => resolve()
+      const openReq = indexedDB.open('WALLET_CONNECT_V2_INDEXED_DB')
+      openReq.onsuccess = () => {
+        const db = openReq.result
+        const names = Array.from(db.objectStoreNames)
+        if (names.length === 0) { db.close(); resolve(); return }
+        const tx = db.transaction(names, 'readwrite')
+        tx.oncomplete = () => { db.close(); resolve() }
+        tx.onerror = () => { db.close(); resolve() }
+        tx.onabort = () => { db.close(); resolve() }
+        for (const name of names) tx.objectStore(name).clear()
+      }
+      openReq.onerror = () => resolve()
+      openReq.onblocked = () => resolve()
     })
     // Always create a fresh adapter — reusing a stale one keeps the old
     // (potentially hung) UniversalProvider and WalletConnectWallet inside it.
