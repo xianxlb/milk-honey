@@ -11,12 +11,21 @@ export const ANIMAL_PRODUCE: Record<AnimalType, { item: string; emoji: string; v
   bear:    { item: 'berries',  emoji: '🫐', verb: 'forages' },
 }
 
+export interface AnimalVisuals {
+  bodyColor: string
+  outlineColor: string
+  accentColor: string
+  blushColor: string
+  bgGradient: [string, string]
+}
+
 export interface AnimalConfig {
   type: AnimalType
   name: string
   personality: string
   emoji: string
   dialogue: [string, string, string, string, string, string, string, string]
+  visuals: AnimalVisuals
 }
 
 export const ANIMAL_TYPES: AnimalConfig[] = [
@@ -25,6 +34,7 @@ export const ANIMAL_TYPES: AnimalConfig[] = [
     name: 'Maple',
     personality: "Born without the self-doubt gene. Cape stays on.",
     emoji: '🐄',
+    visuals: { bodyColor: '#F5F0E8', outlineColor: '#C4A882', accentColor: '#CB8F66', blushColor: '#F4A6A0', bgGradient: ['#FFEFC5', '#F5F0E8'] },
     dialogue: [
       "We'll figure it out when we get there.",
       "The cape stays on. Non-negotiable.",
@@ -41,6 +51,7 @@ export const ANIMAL_TYPES: AnimalConfig[] = [
     name: 'Sir Reginald',
     personality: "Self-appointed aristocrat. Means well. Lands sideways.",
     emoji: '🐷',
+    visuals: { bodyColor: '#F8C4C8', outlineColor: '#D4868B', accentColor: '#F4A6A0', blushColor: '#F4A6A0', bgGradient: ['#FFF0F2', '#F8C4C8'] },
     dialogue: [
       "I meant to do that.",
       "The monocle is prescription. Also decorative.",
@@ -57,6 +68,7 @@ export const ANIMAL_TYPES: AnimalConfig[] = [
     name: 'Gerald',
     personality: "Permanent holiday energy. Parcels arrive eventually.",
     emoji: '🦆',
+    visuals: { bodyColor: '#F8E27A', outlineColor: '#C8A030', accentColor: '#F0A830', blushColor: '#F4A6A0', bgGradient: ['#FFF8D6', '#F8E27A'] },
     dialogue: [
       "It'll get there.",
       "Waddling is not slowness. It's pace.",
@@ -73,6 +85,7 @@ export const ANIMAL_TYPES: AnimalConfig[] = [
     name: 'Remy',
     personality: "Urban entrepreneur. Legally grey. Has an arrangement.",
     emoji: '🦝',
+    visuals: { bodyColor: '#A8A8A8', outlineColor: '#787878', accentColor: '#5C5C5C', blushColor: '#F4A6A0', bgGradient: ['#E8E8E8', '#D0D0D0'] },
     dialogue: [
       "I know a guy.",
       "I found something. It's fine. Don't ask where.",
@@ -89,6 +102,7 @@ export const ANIMAL_TYPES: AnimalConfig[] = [
     name: 'Wooly',
     personality: "Den mother. Gossip oracle. Tea is her love language.",
     emoji: '🐑',
+    visuals: { bodyColor: '#F5F0E8', outlineColor: '#B8A8C0', accentColor: '#D0D3EB', blushColor: '#F4A6A0', bgGradient: ['#F0ECF8', '#D0D3EB'] },
     dialogue: [
       "Come, sit. I'll put the kettle on.",
       "Tea is tea - both herbal or verbal.",
@@ -105,6 +119,7 @@ export const ANIMAL_TYPES: AnimalConfig[] = [
     name: 'Ribbit',
     personality: "Chaos as performance. Clown suit is a lifestyle.",
     emoji: '🐸',
+    visuals: { bodyColor: '#7BC47F', outlineColor: '#4A9050', accentColor: '#5AA85E', blushColor: '#F4A6A0', bgGradient: ['#E0F5E2', '#B8E0BA'] },
     dialogue: [
       "Was that not what was supposed to happen?",
       "The clown suit is not a costume. It's a calling.",
@@ -121,6 +136,7 @@ export const ANIMAL_TYPES: AnimalConfig[] = [
     name: 'Nugget',
     personality: "The eldest. Has seen things. Shows up anyway.",
     emoji: '🐔',
+    visuals: { bodyColor: '#F8E27A', outlineColor: '#C8A030', accentColor: '#F0A830', blushColor: '#F4A6A0', bgGradient: ['#FFF8D6', '#F5F0E8'] },
     dialogue: [
       "I'm not saying I told you so. I'm just standing here.",
       "My back hurts. I'm here anyway.",
@@ -137,6 +153,7 @@ export const ANIMAL_TYPES: AnimalConfig[] = [
     name: 'Bruno',
     personality: "Smol runt of a big family. Emotional anchor. Extremely hungry.",
     emoji: '🐻',
+    visuals: { bodyColor: '#CB8F66', outlineColor: '#9A6840', accentColor: '#A67040', blushColor: '#F4A6A0', bgGradient: ['#F5E6D8', '#E0C8A8'] },
     dialogue: [
       "Is there more?",
       "Nap first. Then food. Then the thing.",

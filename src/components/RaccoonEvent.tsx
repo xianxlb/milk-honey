@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { AnimalIllustration } from '@/components/animals'
 
 interface Props {
   lastDepositAt: Date | null // null = never deposited
@@ -41,7 +42,9 @@ export function RaccoonEvent({ lastDepositAt, hasAnimals }: Props) {
       onClick={dismiss}
     >
       {/* Raccoon animation */}
-      <div className="text-4xl animate-bounce flex-shrink-0">🦝</div>
+      <div className="animate-bounce flex-shrink-0">
+        <AnimalIllustration animalType="raccoon" size={48} expression="happy" animate={false} />
+      </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-[#1A1A1A] mb-0.5">A visitor appeared...</p>
         <p className="text-xs text-[#1A1A1A]/50 italic">one man&apos;s trash is another man&apos;s treasure</p>

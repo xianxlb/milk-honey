@@ -6,8 +6,9 @@ import Link from 'next/link'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { getPortfolio, mergeCards } from '@/lib/client-api'
-import { getAnimalEmoji, getAnimalImage } from '@/lib/animal-images'
-import { getAnimalName, getAnimalPersonality, getAnimalDialogue, type AnimalType } from '@/lib/animals'
+import { getAnimalEmoji, getAnimalImage, hasAnimalSvg } from '@/lib/animal-images'
+import { getAnimalName, getAnimalPersonality, getAnimalDialogue, getAnimalConfig, type AnimalType } from '@/lib/animals'
+import { AnimalIllustration } from '@/components/animals'
 import { MAX_LEVEL } from '@/lib/constants'
 
 type Card = { id: string; animal_type: string; level: number }
@@ -85,7 +86,10 @@ export default function AnimalDetailPage({ params }: { params: Promise<{ id: str
                 <div className="flex items-center justify-center gap-8 mb-8 relative">
                   <div className="animate-spin-slow">
                     <div className="w-28 h-28 bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC] rounded-2xl flex items-center justify-center shadow-xl border-2 border-[#1A1A1A]/10">
-                      <span className="text-5xl">{getAnimalEmoji(card.animal_type)}</span>
+                      {hasAnimalSvg(card.animal_type)
+                        ? <AnimalIllustration animalType={card.animal_type as AnimalType} size={70} animate={false} />
+                        : <span className="text-5xl">{getAnimalEmoji(card.animal_type)}</span>
+                      }
                     </div>
                     <div className="mt-2 bg-[#6CB4E8] rounded-full px-3 py-1 mx-auto w-fit"><span className="text-xs font-bold text-white">Lv.{card.level}</span></div>
                   </div>
@@ -94,7 +98,10 @@ export default function AnimalDetailPage({ params }: { params: Promise<{ id: str
                   </div>
                   <div className="animate-spin-slow" style={{ animationDirection: 'reverse' }}>
                     <div className="w-28 h-28 bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC] rounded-2xl flex items-center justify-center shadow-xl border-2 border-[#1A1A1A]/10">
-                      <span className="text-5xl">{getAnimalEmoji(card.animal_type)}</span>
+                      {hasAnimalSvg(card.animal_type)
+                        ? <AnimalIllustration animalType={card.animal_type as AnimalType} size={70} animate={false} />
+                        : <span className="text-5xl">{getAnimalEmoji(card.animal_type)}</span>
+                      }
                     </div>
                     <div className="mt-2 bg-[#6CB4E8] rounded-full px-3 py-1 mx-auto w-fit"><span className="text-xs font-bold text-white">Lv.{card.level}</span></div>
                   </div>
@@ -111,9 +118,11 @@ export default function AnimalDetailPage({ params }: { params: Promise<{ id: str
                 <h3 className="text-3xl font-bold text-[#1A1A1A] mb-6" style={{ fontFamily: 'Fredoka' }}>Leveled up!</h3>
                 <div className="mb-6">
                   <div className="w-40 h-40 mx-auto bg-gradient-to-br from-[#6CB4E8]/20 to-[#F0C430]/20 rounded-3xl flex items-center justify-center shadow-2xl border-4 border-[#F0C430]/40 relative animate-bounce-in">
-                    {getAnimalImage(mergedCard.animal_type, mergedCard.level)
-                      ? <img src={getAnimalImage(mergedCard.animal_type, mergedCard.level)!} alt={mergedCard.animal_type} className="w-full h-full object-contain" />
-                      : <span className="text-[80px]">{getAnimalEmoji(mergedCard.animal_type)}</span>
+                    {hasAnimalSvg(mergedCard.animal_type)
+                      ? <AnimalIllustration animalType={mergedCard.animal_type as AnimalType} size={120} level={mergedCard.level} expression="celebrating" />
+                      : getAnimalImage(mergedCard.animal_type, mergedCard.level)
+                        ? <img src={getAnimalImage(mergedCard.animal_type, mergedCard.level)!} alt={mergedCard.animal_type} className="w-full h-full object-contain" />
+                        : <span className="text-[80px]">{getAnimalEmoji(mergedCard.animal_type)}</span>
                     }
                     <div className="absolute -top-3 -right-3 bg-[#F0C430] rounded-xl px-3 py-1 border-4 border-[#FBF8F2] shadow-lg">
                       <span className="text-sm font-bold text-[#1A1A1A]" style={{ fontFamily: 'Fredoka' }}>Lv.{mergedCard.level}</span>
@@ -142,10 +151,13 @@ export default function AnimalDetailPage({ params }: { params: Promise<{ id: str
 
       <main className="flex-1 px-6 py-8">
         <div className="bg-[#FBF8F2] rounded-3xl p-8 shadow-lg border-2 border-[#1A1A1A]/8 mb-6">
-          <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC] rounded-2xl overflow-hidden flex items-center justify-center mb-6 relative">
-            {img
-              ? <img src={img} alt={animalType} className="w-full h-full object-contain" />
-              : <span className="text-[120px]">{getAnimalEmoji(card.animal_type)}</span>
+          <div className="aspect-square rounded-2xl overflow-hidden flex items-center justify-center mb-6 relative"
+            style={(() => { try { const v = getAnimalConfig(animalType).visuals; return { background: `linear-gradient(to bottom right, ${v.bgGradient[0]}, ${v.bgGradient[1]})` } } catch { return { background: 'linear-gradient(to bottom right, #F5F0E8, #EDE8DC)' } } })()}>
+            {hasAnimalSvg(card.animal_type)
+              ? <AnimalIllustration animalType={animalType} size={160} level={card.level} />
+              : img
+                ? <img src={img} alt={animalType} className="w-full h-full object-contain" />
+                : <span className="text-[120px]">{getAnimalEmoji(card.animal_type)}</span>
             }
             <div className="absolute top-4 right-4 bg-[#F0C430] rounded-xl px-4 py-2 shadow-lg border-2 border-[#1A1A1A]/10">
               <span className="text-lg font-bold text-[#1A1A1A]" style={{ fontFamily: 'Fredoka' }}>Lv.{card.level}</span>
@@ -155,8 +167,8 @@ export default function AnimalDetailPage({ params }: { params: Promise<{ id: str
             <h2 className="text-3xl font-bold text-[#1A1A1A] mb-1" style={{ fontFamily: 'Fredoka' }}>{getAnimalName(animalType)}</h2>
             <p className="text-sm text-[#1A1A1A]/40 font-medium">{getAnimalPersonality(animalType)}</p>
           </div>
-          <div className="bg-[#F5F0E8] rounded-2xl px-5 py-4 border-2 border-[#1A1A1A]/8">
-            <p className="text-[#1A1A1A]/80 text-sm font-medium italic">
+          <div className="bg-[var(--lavender)]/30 rounded-2xl px-5 py-4 border-2 border-[var(--lavender)]">
+            <p className="text-[var(--lavender-dark)] text-lg font-speech">
               &ldquo;{getAnimalDialogue(animalType, card.level)}&rdquo;
             </p>
           </div>
