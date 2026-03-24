@@ -10,6 +10,16 @@
   --yellow-light: #F7E07A;
   --cream: #F5F0E8;
   --cream-light: #FBF8F2;
+  /* Robert-style warm palette */
+  --warm-cream: #FFEFC5;
+  --warm-golden: #F8C760;
+  --warm-brown: #CB8F66;
+  --warm-brown-dark: #5C3D2E;
+  --lavender: #D0D3EB;
+  --lavender-dark: #495DA5;
+  --blush: #F4A6A0;
+  --outline: #5C3D2E;
+  --outline-width: 4px;
 }
 
 @theme inline {
@@ -72,4 +82,37 @@ h1, h2, h3 {
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+/* Animal illustration animations */
+@keyframes gentle-breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.02); }
+}
+
+@keyframes gentle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.animal-breathe {
+  animation: gentle-breathe 3s ease-in-out infinite;
+}
+
+.animal-bob {
+  animation: gentle-bob 2.5s ease-in-out infinite;
+}
+
+.animal-blink {
+  animation: blink 4s ease-in-out infinite;
+}
+
+/* Speech font — uses Fredoka (rounded, warm, legible) */
+.font-speech {
+  font-family: 'Fredoka', 'Plus Jakarta Sans', cursive, sans-serif;
 }

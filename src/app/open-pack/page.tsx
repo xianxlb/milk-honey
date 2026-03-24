@@ -7,8 +7,9 @@ import { Sparkles } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { usePortfolio } from '@/contexts/portfolio-context'
 import { openPack } from '@/lib/client-api'
-import { getAnimalEmoji, getAnimalImage } from '@/lib/animal-images'
-import { getAnimalName, type AnimalType } from '@/lib/animals'
+import { getAnimalEmoji, getAnimalImage, hasAnimalSvg } from '@/lib/animal-images'
+import { getAnimalName, getAnimalConfig, type AnimalType } from '@/lib/animals'
+import { AnimalIllustration } from '@/components/animals'
 import { IntroDialogue } from '@/components/IntroDialogue'
 
 type Card = { id: string; animal_type: string; level: number }
@@ -173,9 +174,12 @@ function OpenPackContent() {
                       <p className="text-[#1A1A1A] font-bold text-sm">NEW CREW MEMBER!</p>
                     </div>
                   </div>
-                  <div className="relative mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC] p-4">
+                  <div className="relative mb-6 rounded-2xl overflow-hidden p-4"
+                    style={(() => { try { const v = getAnimalConfig(revealedCard.animal_type as AnimalType).visuals; return { background: `linear-gradient(to bottom right, ${v.bgGradient[0]}, ${v.bgGradient[1]})` } } catch { return { background: 'linear-gradient(to bottom right, #F5F0E8, #EDE8DC)' } } })()}>
                     <div className="w-full h-64 flex items-center justify-center">
-                      {getAnimalImage(revealedCard.animal_type, revealedCard.level) ? (
+                      {hasAnimalSvg(revealedCard.animal_type) ? (
+                        <AnimalIllustration animalType={revealedCard.animal_type as AnimalType} size={180} level={revealedCard.level} expression="happy" />
+                      ) : getAnimalImage(revealedCard.animal_type, revealedCard.level) ? (
                         <img src={getAnimalImage(revealedCard.animal_type, revealedCard.level)!} alt={getAnimalName(revealedCard.animal_type as AnimalType)} className="w-full h-full object-contain" />
                       ) : (
                         <span className="text-[120px]">{getAnimalEmoji(revealedCard.animal_type)}</span>

@@ -9,8 +9,9 @@ import { usePortfolio } from '@/contexts/portfolio-context'
 import { useTransactionSender } from '@/hooks/use-transaction-sender'
 import { ensureUser, verifyDeposit, getWithdrawTx, recordWithdrawComplete } from '@/lib/client-api'
 import { BottomNav } from '@/components/bottom-nav'
-import { getAnimalEmoji, getAnimalImage } from '@/lib/animal-images'
-import { getAnimalName, type AnimalType } from '@/lib/animals'
+import { getAnimalEmoji, getAnimalImage, hasAnimalSvg } from '@/lib/animal-images'
+import { getAnimalName, getAnimalConfig, type AnimalType } from '@/lib/animals'
+import { AnimalIllustration } from '@/components/animals'
 import { RaccoonEvent } from '@/components/RaccoonEvent'
 
 type PendingVerification = { txSignature: string; amountUsdc: number }
@@ -301,6 +302,7 @@ export default function HomePage() {
               const canMerge = cards.some(
                 (other: Card) => other.id !== card.id && other.animal_type === card.animal_type && other.level === card.level
               )
+              const visuals = (() => { try { return getAnimalConfig(card.animal_type as AnimalType).visuals } catch { return null } })()
               return (
                 <Link key={card.id} href={`/animal/${card.id}`}
                   className="relative bg-[#FBF8F2] rounded-2xl p-3 shadow-md border-2 border-[#1A1A1A]/8 hover:scale-105 hover:shadow-lg transition-all active:scale-95">
@@ -309,10 +311,13 @@ export default function HomePage() {
                       <span className="text-[8px] font-bold text-[#1A1A1A]">↑</span>
                     </div>
                   )}
-                  <div className="aspect-square bg-gradient-to-br from-[#F5F0E8] to-[#EDE8DC] rounded-xl mb-2 overflow-hidden flex items-center justify-center">
-                    {img
-                      ? <img src={img} alt={card.animal_type} className="w-full h-full object-contain" />
-                      : <span className="text-5xl">{getAnimalEmoji(card.animal_type)}</span>
+                  <div className="aspect-square rounded-xl mb-2 overflow-hidden flex items-center justify-center"
+                    style={visuals ? { background: `linear-gradient(to bottom right, ${visuals.bgGradient[0]}, ${visuals.bgGradient[1]})` } : { background: 'linear-gradient(to bottom right, #F5F0E8, #EDE8DC)' }}>
+                    {hasAnimalSvg(card.animal_type)
+                      ? <AnimalIllustration animalType={card.animal_type as AnimalType} size={80} level={card.level} />
+                      : img
+                        ? <img src={img} alt={card.animal_type} className="w-full h-full object-contain" />
+                        : <span className="text-5xl">{getAnimalEmoji(card.animal_type)}</span>
                     }
                   </div>
                   <div className="text-center">
