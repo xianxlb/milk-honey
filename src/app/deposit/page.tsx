@@ -53,8 +53,12 @@ export default function DepositPage() {
         const msg = err instanceof Error ? err.message : ''
         if (msg === 'Not authenticated') {
           setErrorMsg('Please sign in and try again.')
+        } else if (/insufficient funds/i.test(msg)) {
+          setErrorMsg('Insufficient USDC balance. Please add USDC to your wallet and try again.')
+        } else if (/user rejected/i.test(msg) || /user denied/i.test(msg)) {
+          setErrorMsg('Transaction was cancelled.')
         } else {
-          setErrorMsg(msg || 'Something went wrong. Please try again.')
+          setErrorMsg('Something went wrong. Please try again.')
         }
         setStatus('error')
       }
